@@ -1,0 +1,11 @@
+CareProbe Health — Ringkasan Konsultasi
+Judul: ringkasan-konsultasi
+
+ID konsultasi: 2
+Layanan: Pemeriksaan Gigi
+Tanggal: 2026-10-02T09:00:00.000Z
+Pasien demo: Bima Demo
+Alasan: Simulasi pemeriksaan gigi rutin.
+Status: PENDING
+
+Simulasi layanan kesehatan — data fiktif. Bukan dokumen medis.

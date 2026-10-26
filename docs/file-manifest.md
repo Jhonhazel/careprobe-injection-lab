@@ -1,5 +1,24 @@
 # Manifest CareProbe Health
 
+## Tambahan pengujian URL pada working tree saat ini
+
+Bagian berikut mencatat perubahan setelah refactor produk di bawah, dibanding HEAD `817b5bba12c7f63c710fa6859cbd40911ee89811`. Semua perubahan lokal; belum di-commit, push, atau deploy. Tidak ada dependency, sink command baru, atau perubahan Docker.
+
+| Status | Berkas | Alasan |
+| --- | --- | --- |
+| Diubah | [apps/api/src/app.ts](../apps/api/src/app.ts) | GET query dan POST JSON ekspor berbagi validasi, lookup record, command helper, dan format TXT. |
+| Diubah | [apps/api/src/app.integration.spec.ts](../apps/api/src/app.integration.spec.ts), [apps/api/src/consultations.integration.spec.ts](../apps/api/src/consultations.integration.spec.ts) | Uji URL encoded SQL, validasi dan fail-closed GET pada host. |
+| Diubah | [apps/web/src/lib/components/ServiceCatalog.svelte](../apps/web/src/lib/components/ServiceCatalog.svelte), [apps/web/src/lib/components/ServiceCatalog.spec.ts](../apps/web/src/lib/components/ServiceCatalog.spec.ts) | Kata kunci URL memicu satu pencarian nyata dengan mode Settings; form tetap bekerja. |
+| Diubah | [scripts/test-docker.mjs](../scripts/test-docker.mjs), [scripts/smoke-web.mjs](../scripts/smoke-web.mjs) | Bukti GET/POST setara dalam sandbox dan halaman URL aman saat SSR. |
+| Diubah | [README.md](../README.md), [docs/assignment-mapping.md](../docs/assignment-mapping.md), [docs/test-cases.md](../docs/test-cases.md), [docs/lab-report.md](../docs/lab-report.md), [bruno/02-services.bru](../bruno/02-services.bru) | Panduan HTTP langsung, source/flow/sink/control, hasil dan batas aktual. |
+| Ditambah | [bruno/12-url-export-normal.bru](../bruno/12-url-export-normal.bru), [bruno/13-url-export-vulnerable.bru](../bruno/13-url-export-vulnerable.bru), [bruno/14-url-export-secure.bru](../bruno/14-url-export-secure.bru) | Contoh GET ekspor lokal yang dapat diuji manual, tanpa link otomatis di website. |
+| Ditambah | [docs/evidence/url-http.json](../docs/evidence/url-http.json), [docs/evidence/url-summary-normal.txt](../docs/evidence/url-summary-normal.txt), [docs/evidence/url-summary-vulnerable.txt](../docs/evidence/url-summary-vulnerable.txt) | Respons HTTP/container aktual; TXT ini bukan unduhan browser. |
+| Ditambah | [docs/evidence/http-post-normal.txt](../docs/evidence/http-post-normal.txt), [docs/evidence/http-post-vulnerable.txt](../docs/evidence/http-post-vulnerable.txt) | Salinan TXT dari POST JSON curl langsung terhadap API Docker. |
+| Ditambah | [docs/evidence/url-sql-vulnerable.png](../docs/evidence/url-sql-vulnerable.png), [docs/evidence/url-sql-secure.png](../docs/evidence/url-sql-secure.png), [docs/evidence/url-services-page.png](../docs/evidence/url-services-page.png), [docs/evidence/url-command-secure.png](../docs/evidence/url-command-secure.png) | Screenshot konten tab; address bar/DevTools masih perlu ditangkap mahasiswa. |
+| Diubah | [docs/file-manifest.md](../docs/file-manifest.md) | Daftar perubahan dan berkas bukti terbaru. |
+
+## Refactor produk sebelumnya
+
 Refactor lokal pada branch `codex/careprobe-health-refactor`, dibanding baseline `7810ee9ff41560434457e2d49e11fe076b6be974`. Tidak ada commit/push/deploy. Dependency/lockfile, Dockerfile, Compose, command helper dan sandbox guard tidak berubah.
 
 ## Berkas diubah, ditambah, atau dihapus
@@ -63,7 +82,7 @@ Refactor lokal pada branch `codex/careprobe-health-refactor`, dibanding baseline
 
 ## Semua berkas proyek
 
-75 berkas sumber, konfigurasi, tes, dokumentasi dan bukti terpilih. Dependensi/build/secret/referensi privat dikecualikan.
+87 berkas sumber, konfigurasi, tes, dokumentasi dan bukti terpilih. Dependensi/build/secret/referensi privat dikecualikan.
 
 - [.dockerignore](../.dockerignore)
 - [.gitignore](../.gitignore)
@@ -119,6 +138,9 @@ Refactor lokal pada branch `codex/careprobe-health-refactor`, dibanding baseline
 - [bruno/09-export-secure.bru](../bruno/09-export-secure.bru)
 - [bruno/10-export-vulnerable.bru](../bruno/10-export-vulnerable.bru)
 - [bruno/11-export-secure-retest.bru](../bruno/11-export-secure-retest.bru)
+- [bruno/12-url-export-normal.bru](../bruno/12-url-export-normal.bru)
+- [bruno/13-url-export-vulnerable.bru](../bruno/13-url-export-vulnerable.bru)
+- [bruno/14-url-export-secure.bru](../bruno/14-url-export-secure.bru)
 - [bruno/bruno.json](../bruno/bruno.json)
 - [bruno/environments/Local.bru](../bruno/environments/Local.bru)
 - [docker-compose.yml](../docker-compose.yml)
@@ -131,6 +153,15 @@ Refactor lokal pada branch `codex/careprobe-health-refactor`, dibanding baseline
 - [docs/evidence/health-services-vulnerable.png](../docs/evidence/health-services-vulnerable.png)
 - [docs/evidence/health-summary-secure.txt](../docs/evidence/health-summary-secure.txt)
 - [docs/evidence/health-summary-vulnerable.txt](../docs/evidence/health-summary-vulnerable.txt)
+- [docs/evidence/http-post-normal.txt](../docs/evidence/http-post-normal.txt)
+- [docs/evidence/http-post-vulnerable.txt](../docs/evidence/http-post-vulnerable.txt)
+- [docs/evidence/url-command-secure.png](../docs/evidence/url-command-secure.png)
+- [docs/evidence/url-http.json](../docs/evidence/url-http.json)
+- [docs/evidence/url-services-page.png](../docs/evidence/url-services-page.png)
+- [docs/evidence/url-sql-secure.png](../docs/evidence/url-sql-secure.png)
+- [docs/evidence/url-sql-vulnerable.png](../docs/evidence/url-sql-vulnerable.png)
+- [docs/evidence/url-summary-normal.txt](../docs/evidence/url-summary-normal.txt)
+- [docs/evidence/url-summary-vulnerable.txt](../docs/evidence/url-summary-vulnerable.txt)
 - [docs/file-manifest.md](../docs/file-manifest.md)
 - [docs/implementation-plan.md](../docs/implementation-plan.md)
 - [docs/lab-report.md](../docs/lab-report.md)

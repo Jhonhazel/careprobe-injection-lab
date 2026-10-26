@@ -74,3 +74,21 @@ Gunakan hanya screenshot aplikasi dummy. Periksa tidak ada secret, tab privat, a
 Baseline diperiksa ulang: 61 tes, check 0/0, 24 Docker checks. Refactor: 85 tes API/unit dan 17 tes UI; 39 Docker checks termasuk ekspor TXT record aktual; 11 HTTP smoke checks pada production preview. Lihat test-cases.md untuk hasil final dan batas pengujian browser. Screenshot `evidence/command-vulnerable.png` adalah bukti MVP lama, bukan UI CareProbe Health.
 
 Saat menulis analisis CIA, bedakan dampak potensial sistem nyata dari tindakan lab yang benar-benar dilakukan. Tidak ada pembacaan secret, perubahan file, koneksi keluar, atau perintah bebas. Read-only search tidak menjamin pembatasan baris: semua data harus tetap fiktif.
+
+## Pengujian Injection melalui URL dan Query Parameter
+
+**Objective:** buktikan input URL, tanpa submit form, mencapai sink yang sama. Gunakan URL copy-paste di README; jangan melakukan double decoding.
+
+- **SQL source/flow/sink:** URL keyword → req.query.keyword → GET /api/services → Zod → searchServices → SQLite prepare/step. **Control:** prepared statement dan binding di Secure; read-only, panjang120 dan satu statement tetap. **Evidence:** HTTP/browser normal1, rentan6, secure0. **Impact:** filter dapat dilewati sehingga data dapat terbuka; write/DoS tidak didemonstrasikan. **Mitigation/retest:** input encoded yang sama pada Secure menghasilkan0, input gigi tetap1.
+- **Command source/flow/sink:** URL documentTitle → req.query.documentTitle → GET export handler bersama POST → consultation record → runCommand → shell rentan. **Control:** allowlist tetap, Docker guard, batas1s/4KiB, secure fixed executable/args tanpa shell. **Evidence:** HTTP GET normal dan marker200, TXT Bima Demo ID2; marker pada baris tambahan hanya vulnerable. Secure400 tanpa attachment; host503. **Impact:** command bebas dapat membahayakan CIA pada sistem nyata; lab tidak menguji akses data/perusakan/availability. **Mitigation/retest:** judul marker sama ditolak Secure; judul normal tetap menghasilkan TXT.
+- **Command dari HTTP JSON:** `POST /api/consultations/:id/export` membaca `req.body.documentTitle`, lalu memakai handler, record, sink, kontrol, dan format TXT yang sama. Ini input tanpa form tetapi bukan URL query. Request Bruno 09–11 atau curl pada README dapat menjadi bukti terpisah. `req.params.id` hanya menentukan record melalui validasi dan lookup terparameter; tidak mencapai sink shell.
+
+URL encoding bukan mitigasi; Settings bukan autentikasi/otorisasi server. Direct URL dapat menetapkan mode dalam lab lokal. GET dapat dipanggil ulang/link preview; jangan publish/link otomatis URL rentan. Egress bridge tetap tidak diblokir.
+
+**Batas observasi:** Chrome alat memblokir GET attachment normal (ERR_BLOCKED_BY_CLIENT). File URL yang disimpan pengembang adalah respons HTTP container, bukan unduhan browser. Jangan klaim screenshot/download browser berhasil tanpa mengulangnya sendiri. Screenshot tab tidak mencakup address bar/DevTools; gunakan checklist README untuk bukti mahasiswa. DOCX yang sudah diserahkan tidak diubah.
+
+| Skenario URL | Hasil aktual mahasiswa | Screenshot/Network/TXT dan waktu | Retest |
+| --- | --- | --- | --- |
+| SQL rentan / Secure, input encoded sama | **belum diisi** | **isi setelah diuji** | **isi** |
+| GET TXT normal dan marker rentan | **belum diisi** | **catat sumber HTTP atau browser** | **isi** |
+| GET marker Secure | **belum diisi** | **400 dan tanpa attachment** | **isi** |

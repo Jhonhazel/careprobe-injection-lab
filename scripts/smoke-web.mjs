@@ -25,6 +25,13 @@ for (const [path, target] of [['/labs/sql-injection', '/services'], ['/labs/comm
   const response = await get(path);
   verify(`legacy ${path} redirects to ${target}`, () => { assert.equal(response.status, 307); assert.equal(response.headers.get('location'), target); });
 }
+for (const keyword of ['gigi', '%27%20OR%201%3D1%20--%20']) {
+  const response = await get(`/services?keyword=${keyword}`);
+  const html = await response.text();
+  verify(`direct services page URL ${keyword} is SSR-safe`, () => {
+    assert.equal(response.status, 200); assert.ok(html.includes('catalog-search'));
+  });
+}
 for (const [mode, count] of [['secure', 0], ['vulnerable', 6]]) {
   const response = await get(`/api/services?${new URLSearchParams({ mode, keyword: "' OR 1=1 -- " })}`);
   const body = await response.json();

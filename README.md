@@ -152,7 +152,128 @@ Referensi PDF, konfigurasi `.env*`, dependensi, hasil build, dan screenshot di l
 - `GET /api/services?keyword=...&mode=secure|vulnerable`: `{mode,keyword,count,services}`; query/parameter internal tidak ditampilkan. Mode hilang atau invalid menjadi secure.
 - `GET /api/consultations`: `{consultations:[...]}` dengan serviceName dan record tersimpan.
 - `POST /api/consultations`: `{serviceId:number,patientName:string,reason:string}` → 201 `{consultation}`. ID layanan positif dan harus ada, nama trim 2–60, alasan trim 3–500; field ekstra ditolak.
-- `POST /api/consultations/:id/export`: `{documentTitle,mode}` → TXT attachment UTF-8. ID bilangan positif maksimal sembilan digit; title default `ringkasan-konsultasi`, mode hilang/invalid secure. Hanya suffix marker tetap diperbolehkan di vulnerable.
+- `GET /api/consultations/:id/export?documentTitle=...&mode=...` atau `POST /api/consultations/:id/export` dengan `{documentTitle,mode}` → TXT attachment UTF-8. ID bilangan positif maksimal sembilan digit; title default `ringkasan-konsultasi`, mode hilang/invalid secure. Hanya suffix marker tetap diperbolehkan di vulnerable.
 - Error berbentuk `{error:{code,message}}`; validasi 400, record/layanan tidak ada 404, sandbox tidak siap 503, sibuk 429, batas command 504. Body dibatasi 2 KiB, termasuk karakter multibyte.
 
 Tidak ada autentikasi: seluruh konsultasi simulasi dapat dilihat setiap pengguna lokal. Database di memori reset saat restart. Aplikasi tidak menyediakan penanganan medis, video call, pembayaran, atau penyimpanan rekam medis. Batas detail dan bukti aktual: [test-cases.md](docs/test-cases.md).
+
+## Pengujian Injection melalui URL dan Query Parameter
+
+Query URL tetap input tidak tepercaya meskipun pengguna tidak mengisi form. URL encoding (`%27`, `%3B`, `%20`) hanya cara mengirim karakter, **bukan mitigasi**. Express membaca dan mendekode query satu kali; aplikasi tidak melakukan decodeURIComponent tambahan.
+
+localStorage Settings hanya preferensi frontend, bukan autentikasi atau otorisasi server. Pemanggil API langsung dapat mengirim mode secara eksplisit dalam lab lokal ini. Mode hilang/invalid tetap secure; guard Docker berlaku pada GET maupun POST. Jangan memasukkan judul/data pribadi ke URL: URL dapat tersimpan pada history atau log. Semua data harus fiktif.
+
+### SQL: langkah manual tanpa form
+
+1. Jalankan `pnpm lab:up`, lalu `pnpm dev:web`. Buka URL normal berikut di address bar (tanpa menekan tombol pencarian):
+
+```text
+http://127.0.0.1:3100/api/services?keyword=gigi&mode=secure
+```
+
+2. Buka URL rentan:
+
+```text
+http://127.0.0.1:3100/api/services?keyword=%27%20OR%201%3D1%20--%20&mode=vulnerable
+```
+
+3. Ulangi input identik pada Secure:
+
+```text
+http://127.0.0.1:3100/api/services?keyword=%27%20OR%201%3D1%20--%20&mode=secure
+```
+
+Ekspektasi dan hasil HTTP/browser yang teramati: 200 dengan count **1 / 6 / 0**. `req.query.keyword` langsung masuk validasi dan `searchServices()`, bukan perantara form. Query SQL rentan menggabungkan keyword; Secure memakai `LIKE ?` dan binding. Length120, penolakan titik koma, dan query-only tetap berlaku; jalur tulis konsultasi tidak berubah.
+
+4. Untuk tampilan produk, pilih mode melalui Pengaturan lalu buka langsung:
+
+```text
+http://127.0.0.1:5173/services?keyword=gigi
+http://127.0.0.1:5173/services?keyword=%27%20OR%201%3D1%20--%20
+```
+
+Input terisi dan satu pencarian otomatis dijalankan saat halaman dibuka, menggunakan mode Settings. Parameter mode pada URL halaman tidak mengganti Settings. Form tetap dapat dipakai; submit form tidak menyinkronkan address bar. Untuk menguji URL baru, buka melalui address bar/refresh. Preview memakai port4173, dengan preferensi browser terpisah dari5173.
+
+### Command: langkah manual download dari URL
+
+1. Buka `http://127.0.0.1:3100/api/health` dan pastikan **commandSandbox:true**. Jika tidak siap, jalankan Compose; jangan mematikan guard.
+2. Buka `http://127.0.0.1:3100/api/consultations`. Seed ID **2** adalah Bima Demo / Pemeriksaan Gigi. Gunakan ID yang benar jika data Anda berbeda.
+3. Buka URL normal, lalu buka file `careprobe-konsultasi-2.txt` yang diunduh:
+
+```text
+http://127.0.0.1:3100/api/consultations/2/export?documentTitle=ringkasan-konsultasi&mode=secure
+```
+
+4. Buka URL marker rentan berikut hanya pada lab pribadi:
+
+```text
+http://127.0.0.1:3100/api/consultations/2/export?documentTitle=clinic-demo%3B%20printf%20LAB_MARKER&mode=vulnerable
+```
+
+5. Periksa file TXT terbaru (browser bisa menambahkan `(1)` pada nama). Ekspektasi HTTP200 text/plain attachment, record2 Bima Demo tetap sesuai, dan judul:
+
+```text
+Judul: clinic-demo
+LAB_MARKER
+```
+
+6. Buka retest dengan input yang sama:
+
+```text
+http://127.0.0.1:3100/api/consultations/2/export?documentTitle=clinic-demo%3B%20printf%20LAB_MARKER&mode=secure
+```
+
+Ekspektasi HTTP400 JSON `VALIDATION_ERROR`, tanpa Content-Disposition/download. Record tak ada404; ID/title malformed400; mode hilang/invalid secure. GET dan POST memakai handler yang sama; sumber GET adalah `req.query.documentTitle`, sumber POST tetap `req.body.documentTitle`. Nama file selalu dari ID tervalidasi, tanpa filesystem write.
+
+**Observasi aktual:** normal GET200 dan marker GET200 dengan TXT record2 telah diperiksa melalui HTTP ke container, termasuk kesamaan dengan POST. Secure GET400 juga teramati di browser. Chrome yang dikontrol alat memblokir unduhan GET normal dengan ERR_BLOCKED_BY_CLIENT; unduhan GET browser ke disk belum terverifikasi, dan blokir tidak dilewati. Bukti `docs/evidence/url-summary-*.txt` berasal dari respons HTTP, bukan unduhan browser. Jika browser Anda memblokir, catat hasil itu; gunakan tes Docker untuk bukti server dan jangan menyebut browser berhasil mengunduh.
+
+### Sumber HTTP selain form: JSON body dan path
+
+Endpoint POST yang sudah ada menerima `req.body.documentTitle` dari JSON. Ini juga dapat diuji langsung tanpa form, tetapi **bukan** parameter URL. Setelah `commandSandbox:true` dan ID konsultasi 2 terverifikasi, jalankan hanya terhadap API Docker lokal:
+
+```sh
+curl -sS -D /tmp/careprobe-post-normal.headers -o /tmp/careprobe-post-normal.txt \
+  -H 'Content-Type: application/json' \
+  --data '{"mode":"secure","documentTitle":"ringkasan-konsultasi"}' \
+  http://127.0.0.1:3100/api/consultations/2/export
+curl -sS -D /tmp/careprobe-post-marker.headers -o /tmp/careprobe-post-marker.txt \
+  -H 'Content-Type: application/json' \
+  --data '{"mode":"vulnerable","documentTitle":"clinic-demo; printf LAB_MARKER"}' \
+  http://127.0.0.1:3100/api/consultations/2/export
+curl -i -H 'Content-Type: application/json' \
+  --data '{"mode":"secure","documentTitle":"clinic-demo; printf LAB_MARKER"}' \
+  http://127.0.0.1:3100/api/consultations/2/export
+```
+
+Periksa header 200 dan isi TXT dengan `cat /tmp/careprobe-post-normal.txt /tmp/careprobe-post-marker.txt`; request Secure terakhir seharusnya 400 tanpa attachment. Bruno request 09–11 menyediakan alur POST yang sama. `:id` berasal dari `req.params.id`, divalidasi sebagai ID positif lalu dipakai pada lookup SQLite terparameter; ID bukan sink injection. Input form Riwayat hanya cara lain mengirim POST JSON. Validasi frontend tidak menggantikan validasi Zod, allowlist, dan sandbox di backend.
+
+GET dapat diulang atau dipicu preview link. Karena itu jangan masukkan URL rentan ke navigasi, metadata, sitemap, preload atau pemuatan otomatis. Hanya label biasa atau suffix marker tetap yang diterima; kedua mode tetap Docker-only. Egress bridge belum diblokir. Hentikan frontend dengan Ctrl+C, lalu `pnpm lab:down`.
+
+### Source → flow → sink → control
+
+```text
+SQL: URL keyword → req.query.keyword → Zod → searchServices → SQLite prepare/step
+     Secure: SQL template tetap + statement.bind(parameter).
+Command: URL documentTitle → req.query → exportSummary → record SQLite → runCommand
+         Rentan: /bin/sh -c menafsirkan string; Secure: executable tetap + argumen terpisah,
+         shell:false, allowlist; kedua mode: sandbox gate + timeout/output/concurrency limits.
+POST JSON documentTitle → req.body → exportSummary → runCommand (sink dan control sama).
+Path :id → req.params.id → validasi ID → lookup SQLite terparameter (bukan sink injection).
+```
+
+Dampak potensial SQL mencakup terbukanya record di luar filter (confidentiality); integrity/availability pada sistem nyata bergantung hak DB. Lab mempertahankan read-only search. Shell bebas pada sistem nyata dapat membaca/mengubah data atau mengganggu proses; lab hanya memperlihatkan marker dan tidak menguji dampak tersebut. Mitigasi yang diterapkan adalah binding, eksekusi tanpa shell dan hak minimum; validasi frontend/URL encoding tidak menggantikannya. Retest memakai input encoded yang sama dan mode Secure.
+
+### Checklist screenshot untuk laporan mahasiswa
+
+- [ ] Address bar dengan URL SQL encoded dan JSON vulnerable count6.
+- [ ] Address bar dengan payload SQL sama, Secure count0.
+- [ ] DevTools Network (Preserve log): GET URL, query parameters, status, response JSON/TXT, Content-Type dan Content-Disposition. Catat actual response, termasuk jika browser memblokir.
+- [ ] Address bar URL command encoded; jika download membuat halaman tetap sebelumnya, gunakan address bar dan Network request yang benar-benar tercatat.
+- [ ] Bruno atau terminal curl: POST JSON normal, marker Vulnerable, dan penolakan Secure; tampilkan request body, status, dan header tanpa data nyata.
+- [ ] TXT hasil unduhan aktual terbuka, recordID2 dan LAB_MARKER; jangan mengganti bukti browser dengan file HTTP tanpa memberi label sumber.
+- [ ] URL Secure command menghasilkan VALIDATION_ERROR400 dan tidak ada attachment.
+- [ ] Kode `req.query`/handler bersama di app.ts, parameter binding di database.ts, serta shell/no-shell/allowlist/gate di command.ts.
+- [ ] Health commandSandbox:true dan terminal `pnpm test:docker` yang memeriksa konfigurasi sandbox sebelum payload.
+- [ ] Catat tanggal, mode, ID dan sumber bukti; hasil yang belum dijalankan tetap ditulis belum diuji.
+
+Screenshot pengembang dalam docs/evidence menampilkan konten tab; address bar dan DevTools lengkap tetap perlu ditangkap mahasiswa. Laporan DOCX yang sudah diserahkan tidak diubah.

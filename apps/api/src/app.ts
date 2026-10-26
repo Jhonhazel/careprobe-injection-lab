@@ -1,4 +1,4 @@
-import express, { type ErrorRequestHandler } from "express";
+import express, { type ErrorRequestHandler, type RequestHandler } from "express";
 import { z } from "zod";
 import { createDatabase, searchServices, createConsultation, readConsultations } from "./database.js";
 import { LabError } from "./errors.js";
@@ -76,12 +76,12 @@ export async function createApp() {
     }).parse(req.body);
     res.status(201).json({ consultation: createConsultation(db, input) });
   });
-  app.post('/api/consultations/:id/export', async (req, res) => {
+  const exportSummary: RequestHandler = async (req, res) => {
     const id = Number(z.string().regex(/^[1-9]\d{0,8}$/).parse(req.params.id));
     const { mode, documentTitle } = z.strictObject({
       mode: productModeSchema,
       documentTitle: z.string().min(1).max(80).default('ringkasan-konsultasi')
-    }).parse(req.body);
+    }).parse(req.method === 'GET' ? req.query : req.body);
     const consultation = readConsultations(db, id)[0];
     if (!consultation) throw new LabError(404, 'CONSULTATION_NOT_FOUND', 'Konsultasi tidak ditemukan.');
     // Reuse the existing bounded formatter and Docker guard; no new command sink or paths.
@@ -95,7 +95,10 @@ export async function createApp() {
       'Simulasi layanan kesehatan — data fiktif. Bukan dokumen medis.'
     ].join('\n');
     res.attachment(`careprobe-konsultasi-${id}.txt`).type('text/plain').send(summary);
-  });
+  };
+  // Local educational download only: both inputs use the same allowlist and Docker gate.
+  app.get('/api/consultations/:id/export', exportSummary);
+  app.post('/api/consultations/:id/export', exportSummary);
   app.post("/api/labs/command", async (req, res) => {
     const { mode, label } = z
       .strictObject({

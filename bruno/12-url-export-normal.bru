@@ -1,0 +1,24 @@
+meta {
+  name: URL summary normal
+  type: http
+  seq: 12
+}
+get {
+  url: {{baseUrl}}/api/consultations/2/export?documentTitle=ringkasan-konsultasi&mode=secure
+  body: none
+  auth: none
+}
+tests {
+  test("URL response status and record or rejection", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.include("Pasien demo: Bima Demo");
+  });
+}
+docs {
+  Local Docker only. ID2 is seeded Bima Demo; verify GET /api/consultations first.
+  Source req.query.documentTitle; same validated bounded runCommand and TXT handler as POST.
+  Normal200 text/plain attachment careprobe-konsultasi-2.txt; missing record404/invalidID400.
+  Missing or invalid mode defaults secure. Exact marker suffix only in vulnerable; secure400 no attachment.
+  Host normal labels503 SANDBOX_REQUIRED. No filesystem or DB writes. URL encoding is transport, not mitigation.
+  Do not publish, preload or automatically follow vulnerable links. Bridge egress is not blocked.
+}

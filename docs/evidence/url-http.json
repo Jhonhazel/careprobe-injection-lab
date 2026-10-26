@@ -1,0 +1,104 @@
+{
+  "observedAt": "2026-10-26T12:07:13.388Z",
+  "method": "GET",
+  "transport": "Node fetch over HTTP to verified local Docker API; not a browser download",
+  "health": {
+    "status": "ok",
+    "database": "ready",
+    "commandSandbox": true
+  },
+  "responses": [
+    {
+      "url": "http://127.0.0.1:3100/api/services?keyword=gigi&mode=secure",
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "connection": "keep-alive",
+        "content-length": "223",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Mon, 26 Oct 2026 12:07:13 GMT",
+        "etag": "W/\"df-1fARACpUozDViIxt8BFwk4+SYjk\"",
+        "keep-alive": "timeout=5",
+        "x-content-type-options": "nosniff"
+      },
+      "body": "{\"mode\":\"secure\",\"keyword\":\"gigi\",\"services\":[{\"id\":2,\"name\":\"Pemeriksaan Gigi\",\"category\":\"Pemeriksaan\",\"description\":\"Layanan pemeriksaan gigi fiktif, tanpa tindakan medis nyata.\",\"duration\":45,\"price\":120000}],\"count\":1}"
+    },
+    {
+      "url": "http://127.0.0.1:3100/api/services?keyword=%27%20OR%201%3D1%20--%20&mode=vulnerable",
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "connection": "keep-alive",
+        "content-length": "1037",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Mon, 26 Oct 2026 12:07:13 GMT",
+        "etag": "W/\"40d-V2TdpJXHFdSjtACtaMhWTgMco5o\"",
+        "keep-alive": "timeout=5",
+        "x-content-type-options": "nosniff"
+      },
+      "body": "{\"mode\":\"vulnerable\",\"keyword\":\"' OR 1=1 -- \",\"services\":[{\"id\":1,\"name\":\"Konsultasi Umum\",\"category\":\"Konsultasi\",\"description\":\"Simulasi konsultasi kesehatan umum untuk kebutuhan latihan.\",\"duration\":30,\"price\":75000},{\"id\":2,\"name\":\"Pemeriksaan Gigi\",\"category\":\"Pemeriksaan\",\"description\":\"Layanan pemeriksaan gigi fiktif, tanpa tindakan medis nyata.\",\"duration\":45,\"price\":120000},{\"id\":3,\"name\":\"Skrining Mata\",\"category\":\"Pemeriksaan\",\"description\":\"Contoh layanan pemeriksaan ketajaman penglihatan.\",\"duration\":20,\"price\":60000},{\"id\":4,\"name\":\"Konsultasi Nutrisi\",\"category\":\"Konsultasi\",\"description\":\"Contoh konsultasi pola makan dengan profil sepenuhnya fiktif.\",\"duration\":40,\"price\":95000},{\"id\":5,\"name\":\"Cek Kesehatan Dasar\",\"category\":\"Skrining\",\"description\":\"Paket skrining dummy untuk menjelajahi katalog laboratorium.\",\"duration\":60,\"price\":150000},{\"id\":6,\"name\":\"Edukasi Kebugaran\",\"category\":\"Edukasi\",\"description\":\"Sesi edukasi kebugaran fiktif untuk latihan pencarian.\",\"duration\":30,\"price\":50000}],\"count\":6}"
+    },
+    {
+      "url": "http://127.0.0.1:3100/api/services?keyword=%27%20OR%201%3D1%20--%20&mode=secure",
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "connection": "keep-alive",
+        "content-length": "66",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Mon, 26 Oct 2026 12:07:13 GMT",
+        "etag": "W/\"42-dIbP2hv5suzvVwUBiJnd7PUDRIQ\"",
+        "keep-alive": "timeout=5",
+        "x-content-type-options": "nosniff"
+      },
+      "body": "{\"mode\":\"secure\",\"keyword\":\"' OR 1=1 -- \",\"services\":[],\"count\":0}"
+    },
+    {
+      "url": "http://127.0.0.1:3100/api/consultations/2/export?documentTitle=ringkasan-konsultasi&mode=secure",
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "connection": "keep-alive",
+        "content-disposition": "attachment; filename=careprobe-konsultasi-2.txt",
+        "content-length": "293",
+        "content-type": "text/plain; charset=utf-8",
+        "date": "Mon, 26 Oct 2026 12:07:13 GMT",
+        "etag": "W/\"125-HFAhZ5CBLSetOOCfLpUD24fMfq8\"",
+        "keep-alive": "timeout=5",
+        "x-content-type-options": "nosniff"
+      },
+      "body": "CareProbe Health — Ringkasan Konsultasi\nJudul: ringkasan-konsultasi\n\nID konsultasi: 2\nLayanan: Pemeriksaan Gigi\nTanggal: 2026-10-02T09:00:00.000Z\nPasien demo: Bima Demo\nAlasan: Simulasi pemeriksaan gigi rutin.\nStatus: PENDING\n\nSimulasi layanan kesehatan — data fiktif. Bukan dokumen medis."
+    },
+    {
+      "url": "http://127.0.0.1:3100/api/consultations/2/export?documentTitle=clinic-demo%3B%20printf%20LAB_MARKER&mode=vulnerable",
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "connection": "keep-alive",
+        "content-disposition": "attachment; filename=careprobe-konsultasi-2.txt",
+        "content-length": "295",
+        "content-type": "text/plain; charset=utf-8",
+        "date": "Mon, 26 Oct 2026 12:07:13 GMT",
+        "etag": "W/\"127-pt4L8u+odWKC3pnE2Qn17e+Wh4A\"",
+        "keep-alive": "timeout=5",
+        "x-content-type-options": "nosniff"
+      },
+      "body": "CareProbe Health — Ringkasan Konsultasi\nJudul: clinic-demo\nLAB_MARKER\n\nID konsultasi: 2\nLayanan: Pemeriksaan Gigi\nTanggal: 2026-10-02T09:00:00.000Z\nPasien demo: Bima Demo\nAlasan: Simulasi pemeriksaan gigi rutin.\nStatus: PENDING\n\nSimulasi layanan kesehatan — data fiktif. Bukan dokumen medis."
+    },
+    {
+      "url": "http://127.0.0.1:3100/api/consultations/2/export?documentTitle=clinic-demo%3B%20printf%20LAB_MARKER&mode=secure",
+      "status": 400,
+      "headers": {
+        "cache-control": "no-store",
+        "connection": "keep-alive",
+        "content-length": "115",
+        "content-type": "application/json; charset=utf-8",
+        "date": "Mon, 26 Oct 2026 12:07:13 GMT",
+        "etag": "W/\"73-v0RiLiTk3mLcAmnhvvNcjiA/Hpk\"",
+        "keep-alive": "timeout=5",
+        "x-content-type-options": "nosniff"
+      },
+      "body": "{\"error\":{\"code\":\"VALIDATION_ERROR\",\"message\":\"Label secure: 1–40 huruf, angka, tanda hubung, atau underscore.\"}}"
+    }
+  ]
+}

@@ -128,6 +128,54 @@ for (const [documentTitle, status] of [['a'.repeat(40), 200], ['a'.repeat(41), 4
   verify(`export title validation: ${documentTitle}`, () => assert.equal(result.status, status));
 }
 const finalServices = await call('/api/services');
+for (const mode of ['secure', 'vulnerable']) {
+  const get = await call(`/api/consultations/2/export?documentTitle=ringkasan-konsultasi&mode=${mode}`);
+  const post = await call('/api/consultations/2/export', { mode, documentTitle: 'ringkasan-konsultasi' });
+  verify(`GET URL normal ${mode} matches POST and selected SQLite record 2`, () => {
+    assert.equal(get.status, 200); assert.equal(post.status, 200); assert.equal(get.body, post.body);
+    assert.ok(get.body.includes('Pasien demo: Bima Demo'));
+    assert.ok(get.body.includes('Layanan: Pemeriksaan Gigi'));
+    assert.ok(get.body.includes('ID konsultasi: 2'));
+    assert.ok(!get.body.includes('Alya Demo'));
+    assert.match(get.headers.get('content-disposition'), /^attachment; filename="?careprobe-konsultasi-2\.txt"?$/);
+    assert.match(get.headers.get('content-type'), /^text\/plain/);
+    assert.equal(get.headers.get('cache-control'), 'no-store');
+  });
+}
+const urlMarker = '/api/consultations/2/export?documentTitle=clinic-demo%3B%20printf%20LAB_MARKER';
+const getMarker = await call(`${urlMarker}&mode=vulnerable`);
+verify('GET URL query executes only the fixed harmless marker in Docker', () => {
+  assert.equal(getMarker.status, 200);
+  assert.ok(getMarker.body.includes('Judul: clinic-demo\nLAB_MARKER\n'));
+  assert.ok(getMarker.body.includes('Pasien demo: Bima Demo'));
+});
+for (const suffix of ['&mode=secure', '', '&mode=invalid']) {
+  const result = await call(`${urlMarker}${suffix}`);
+  verify(`GET URL marker secure fallback rejected: ${suffix || 'missing'}`, () => {
+    assert.equal(result.status, 400); assert.equal(result.body.error.code, 'VALIDATION_ERROR');
+    assert.equal(result.headers.get('content-disposition'), null);
+  });
+}
+for (const query of ['', '?mode=invalid']) {
+  const result = await call(`/api/consultations/2/export${query}`);
+  verify(`GET URL default title and safe mode: ${query || 'missing'}`, () => {
+    assert.equal(result.status, 200); assert.ok(result.body.includes('Judul: ringkasan-konsultasi'));
+  });
+}
+for (const [path, status, code] of [
+  ['/api/consultations/999/export', 404, 'CONSULTATION_NOT_FOUND'],
+  ['/api/consultations/0/export', 400, 'VALIDATION_ERROR'],
+  ['/api/consultations/2/export?documentTitle=&mode=vulnerable', 400, 'VALIDATION_ERROR'],
+  [`/api/consultations/2/export?documentTitle=${'a'.repeat(81)}`, 400, 'VALIDATION_ERROR'],
+  ['/api/consultations/2/export?documentTitle=clinic-demo%3B%20echo%20LAB_MARKER&mode=vulnerable', 400, 'VALIDATION_ERROR'],
+  ['/api/consultations/2/export?documentTitle=clinic-demo%253B%2520printf%2520LAB_MARKER&mode=vulnerable', 400, 'VALIDATION_ERROR']
+]) {
+  const result = await call(path);
+  verify(`GET URL controlled rejection ${path}`, () => {
+    assert.equal(result.status, status); assert.equal(result.body.error.code, code);
+    assert.equal(result.headers.get('content-disposition'), null);
+  });
+}
 const finalHistory = await call('/api/consultations');
 verify('search and export do not modify stored services or consultations', () => {
   assert.deepEqual(finalServices.body.services, services.body.services);

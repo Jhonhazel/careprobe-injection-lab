@@ -16,6 +16,8 @@ tests {
   });
 }
 docs {
+  Direct address-bar GET is supported; req.query.keyword reaches the existing searchServices helper.
+  Website /services?keyword=gigi also searches automatically with Settings mode.
   keyword is optional, string up to 120 characters, no semicolon. mode accepts secure/vulnerable; missing or invalid mode falls back to secure. Other unknown parameters receive 400.
   Expected HTTP 200 with one service. Read-only SQLite query with parameter binding.
 }
