@@ -1,0 +1,19 @@
+meta {
+  name: Download normal consultation summary
+  type: http
+  seq: 9
+}
+post {
+  url: {{baseUrl}}/api/consultations/1/export
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+}
+body:json {
+  {"mode":"secure","documentTitle":"ringkasan-konsultasi"}
+}
+docs {
+  Docker only. Expected 200 text/plain UTF-8 attachment careprobe-konsultasi-1.txt with stored Alya Demo record. No filesystem writes or DB mutation. Missing/invalid mode falls back to secure. Normal title 1-40 ASCII letters/digits/hyphen/underscore. Host503; invalid title400; unknown ID404.
+}

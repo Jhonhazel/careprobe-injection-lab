@@ -1,0 +1,19 @@
+meta {
+  name: Summary marker secure rejection
+  type: http
+  seq: 11
+}
+post {
+  url: {{baseUrl}}/api/consultations/1/export
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+}
+body:json {
+  {"mode":"secure","documentTitle":"clinic-demo; printf LAB_MARKER"}
+}
+docs {
+  Expected400 VALIDATION_ERROR, no attachment and no process. Same harmless input as request10. This rejection is the successful mitigation. Shared command errors429 busy/504 limit/503 sandbox; body2KiB.
+}

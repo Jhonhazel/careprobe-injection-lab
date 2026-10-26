@@ -1,5 +1,4 @@
 export type Mode = "secure" | "vulnerable";
-export type LabKind = "sql" | "command";
 export interface Service {
   id: number;
   name: string;
@@ -14,19 +13,17 @@ export interface CatalogResult {
   count: number;
   services: Service[];
 }
-export interface SqlResult extends CatalogResult {
-  query: string;
-  parameters: string[];
+export interface ConsultationInput {
+  serviceId: number;
+  patientName: string;
+  reason: string;
 }
-export interface CommandResult {
-  mode: Mode;
-  label: string;
-  output: string;
-  shell: boolean;
-  timeoutMs: number;
-  outputLimitBytes: number;
+export interface Consultation extends ConsultationInput {
+  id: number;
+  serviceName: string;
+  status: 'PENDING';
+  createdAt: string;
 }
-export type LabResult = SqlResult | CommandResult;
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -39,7 +36,8 @@ export class ApiError extends Error {
 
 export async function apiRequest<T>(
   path: string,
-  body?: { mode: Mode; label: string },
+  body?: object,
+  responseType: 'json' | 'text' = 'json',
 ): Promise<T> {
   let response: Response;
   try {
@@ -60,6 +58,7 @@ export async function apiRequest<T>(
       "API tidak dapat dihubungi. Pastikan Docker Compose berjalan, lalu coba lagi.",
     );
   }
+  if (response.ok && responseType === 'text') return await response.text() as T;
   let data;
   try {
     data = await response.json();
@@ -85,61 +84,4 @@ export async function apiRequest<T>(
     );
   }
   return data as T;
-}
-
-export interface Evidence {
-  kind: LabKind;
-  mode: Mode;
-  input: string;
-  time: string;
-  status: number;
-  result?: LabResult;
-  error?: string;
-}
-const evidenceKey = "careprobe-evidence-v1";
-export function readEvidence(): Evidence[] {
-  try {
-    const data: unknown = JSON.parse(
-      sessionStorage.getItem(evidenceKey) ?? "[]",
-    );
-    return Array.isArray(data)
-      ? data
-          .filter(
-            (row): row is Evidence =>
-              row &&
-              ["sql", "command"].includes(row.kind) &&
-              ["secure", "vulnerable"].includes(row.mode) &&
-              typeof row.input === "string" &&
-              typeof row.status === "number" &&
-              typeof row.time === "string",
-          )
-          .slice(0, 4)
-      : [];
-  } catch {
-    return [];
-  }
-}
-export function rememberEvidence(evidence: Evidence) {
-  try {
-    sessionStorage.setItem(
-      evidenceKey,
-      JSON.stringify(
-        [
-          evidence,
-          ...readEvidence().filter(
-            (row) => row.kind !== evidence.kind || row.mode !== evidence.mode,
-          ),
-        ].slice(0, 4),
-      ),
-    );
-  } catch {
-    /* Storage may be disabled; the current result still works. */
-  }
-}
-export function clearEvidence() {
-  try {
-    sessionStorage.removeItem(evidenceKey);
-  } catch {
-    /* Optional storage. */
-  }
 }

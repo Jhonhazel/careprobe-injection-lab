@@ -1,0 +1,11 @@
+CareProbe Health — Ringkasan Konsultasi
+Judul: ringkasan-konsultasi
+
+ID konsultasi: 5
+Layanan: Konsultasi Umum
+Tanggal: 2026-10-26T08:50:47.423Z
+Pasien demo: Nadia Browser Demo
+Alasan: Simulasi konsultasi melalui browser lokal.
+Status: PENDING
+
+Simulasi layanan kesehatan — data fiktif. Bukan dokumen medis.

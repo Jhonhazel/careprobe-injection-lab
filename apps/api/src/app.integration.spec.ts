@@ -170,11 +170,28 @@ describe("SQLite catalog and SQL laboratory", () => {
     expect(secure.body.parameters).toEqual(["%' OR 1=1 -- %"]);
   });
 
-  it("keeps browsing secure even when a mode is supplied", async () => {
+  it("uses the same SQL behavior through ordinary services without leaking queries", async () => {
     const response = await request(app)
       .get("/api/services")
       .query({ mode: "vulnerable", keyword: "' OR 1=1 -- " });
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(200);
+    expect(response.body.count).toBe(6);
+    expect(response.body.query).toBeUndefined();
+    expect(response.body.parameters).toBeUndefined();
+    const secure = await request(app).get('/api/services').query({ mode: 'secure', keyword: "' OR 1=1 -- " });
+    expect(secure.body.count).toBe(0);
+  });
+
+  it.each([undefined, 'other', ['secure', 'vulnerable']])('defaults ordinary search to secure for missing/invalid mode: %j', async (mode) => {
+    const response = await request(app).get('/api/services').query({ ...(mode === undefined ? {} : { mode }), keyword: "' OR 1=1 -- " });
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({ mode: 'secure', count: 0 });
+  });
+
+  it.each(['secure', 'vulnerable'])('ordinary normal search works in %s mode', async (mode) => {
+    const response = await request(app).get('/api/services').query({ mode, keyword: 'gigi' });
+    expect(response.status).toBe(200);
+    expect(response.body.count).toBe(1);
   });
 
   it("never executes a stacked write and keeps seed records intact", async () => {

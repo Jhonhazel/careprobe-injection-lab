@@ -4,7 +4,7 @@ meta {
   seq: 3
 }
 get {
-  url: {{baseUrl}}/api/labs/sql?mode=vulnerable&keyword=%27%20OR%201%3D1%20--%20
+  url: {{baseUrl}}/api/services?mode=vulnerable&keyword=%27%20OR%201%3D1%20--%20
   body: none
   auth: none
 }
@@ -17,6 +17,6 @@ tests {
 docs {
   LOCAL LAB ONLY. Payload: ' OR 1=1 -- followed by a space. SELECT-only query on synthetic records.
   mode accepts secure or vulnerable, default secure. keyword <=120 characters without semicolon.
-  Expected HTTP 200 count 6; invalid mode/length 400 VALIDATION_ERROR, malformed SQL 400 INVALID_SQL.
+  Expected HTTP 200 count 6; invalid mode falls back to secure; invalid length 400 VALIDATION_ERROR, malformed SQL 400 INVALID_SQL.
   No database write or persistent side effects. Compare the exact same input with request 04.
 }

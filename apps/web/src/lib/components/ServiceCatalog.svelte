@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { apiRequest, type CatalogResult } from '../api';
   import ServiceCards from './ServiceCards.svelte';
+  import { loadSecurityMode, securityMode } from '../security-mode';
   let { compact = false }: { compact?: boolean } = $props();
   let keyword = $state('');
   let loading = $state(true);
@@ -14,7 +15,7 @@
     result = null;
     try {
       result = await apiRequest<CatalogResult>(
-        `/api/services?${new URLSearchParams({ keyword })}`,
+        `/api/services?${new URLSearchParams({ keyword, mode: $securityMode })}`,
       );
     } catch (caught) {
       error = caught instanceof Error ? caught.message : 'Pencarian gagal.';
@@ -23,6 +24,7 @@
     }
   }
   onMount(() => {
+    loadSecurityMode();
     void search();
   });
 </script>
@@ -44,11 +46,11 @@
   </form>
 {/if}
 <div aria-live="polite" aria-busy={loading}>
-  {#if loading}<p role="status" class="notice">Memuat layanan dari SQLite…</p>
+  {#if loading}<p role="status" class="notice">Memuat layanan…</p>
   {:else if error}<p role="alert" class="notice error">{error}</p>
   {:else if result}
     {#if !compact}<p class="catalog-count">
-        {result.count} layanan tersedia <span>· Parameter binding aktif</span>
+        {result.count} layanan tersedia
       </p>{/if}
     {#if result.count === 0}<p class="notice">
         Tidak ada layanan yang cocok. Coba kata kunci lain.
