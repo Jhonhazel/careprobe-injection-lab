@@ -1,0 +1,29 @@
+meta {
+  name: Command marker secure rejection
+  type: http
+  seq: 6
+}
+post {
+  url: {{baseUrl}}/api/labs/command
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+}
+body:json {
+  {"mode":"secure","label":"clinic-demo; printf LAB_MARKER"}
+}
+tests {
+  test("Server rejects the marker before execution", function () {
+    expect(res.getStatus()).to.equal(400);
+    expect(res.getBody().error.code).to.equal("VALIDATION_ERROR");
+    expect(res.getBody().output).to.equal(undefined);
+  });
+}
+docs {
+  Expected rejection is a successful mitigation. Label allows only 1-40 letters, digits, underscore or hyphen.
+  Use clinic-demo to test successful secure formatting inside Docker: shell false, one diagnostic line.
+  Mode defaults to secure. Both valid modes with a normal label return 503 outside Docker.
+  No process is started for this invalid label; no persistent side effects.
+}

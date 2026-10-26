@@ -1,0 +1,21 @@
+meta {
+  name: API readiness
+  type: http
+  seq: 1
+}
+get {
+  url: {{baseUrl}}/api/health
+  body: none
+  auth: none
+}
+tests {
+  test("Database and Docker sandbox are ready", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().database).to.equal("ready");
+    expect(res.getBody().commandSandbox).to.equal(true);
+  });
+}
+docs {
+  Start pnpm lab:up first. Read-only health check; no data or process side effects.
+  Expected HTTP 200 with status ok, database ready, commandSandbox true.
+}

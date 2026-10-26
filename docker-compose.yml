@@ -1,0 +1,35 @@
+name: careprobe-lab
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    user: "10001:10001"
+    read_only: true
+    privileged: false
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 48
+    mem_limit: 256m
+    cpus: 0.50
+    ports:
+      - "127.0.0.1:3100:3100"
+    networks: [lab]
+    restart: "no"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3100/api/health').then(async r=>{const b=await r.json();process.exit(r.ok&&b.commandSandbox?0:1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    logging:
+      driver: json-file
+      options:
+        max-size: "1m"
+        max-file: "1"
+networks:
+  lab:
+    # Docker Desktop here suppresses published ports on internal networks.
+    # Bridge preserves localhost access; outbound network isolation is NOT claimed.
+    driver: bridge

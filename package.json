@@ -1,0 +1,17 @@
+{
+  "name": "careprobe-injection-lab",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.13.1",
+  "scripts": {
+    "dev:web": "pnpm --filter @careprobe/web dev",
+    "dev:api": "pnpm --filter @careprobe/api dev",
+    "test": "pnpm -r test",
+    "check": "pnpm -r check",
+    "build": "pnpm -r build",
+    "preview": "pnpm --filter @careprobe/web preview",
+    "lab:up": "docker compose up --build -d --wait",
+    "lab:down": "docker compose down",
+    "test:docker": "node scripts/test-docker.mjs"
+  }
+}

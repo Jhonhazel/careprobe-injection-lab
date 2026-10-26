@@ -1,0 +1,30 @@
+meta {
+  name: Command marker vulnerable Docker only
+  type: http
+  seq: 5
+}
+post {
+  url: {{baseUrl}}/api/labs/command
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+}
+body:json {
+  {"mode":"vulnerable","label":"clinic-demo; printf LAB_MARKER"}
+}
+tests {
+  test("Sandbox shell prints the harmless extra marker", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().output).to.equal("diagnostic: clinic-demo\nLAB_MARKER");
+  });
+}
+docs {
+  LOCAL DOCKER LAB ONLY. Requires the complete sandbox runtime gate. Never remove guard.
+  Vulnerable label: 1-40 alphanumeric, underscore or hyphen, optionally followed by exactly ; printf LAB_MARKER.
+  Expected HTTP 200, shell true, output diagnostic line plus LAB_MARKER. Each call executes printf again.
+  Normal input clinic-demo prints only the diagnostic line. No files/network operations.
+  Errors: 400 validation, 413 oversized body, 503 SANDBOX_REQUIRED, 429 LAB_BUSY, 504 COMMAND_LIMIT.
+  Process limited to 1s/4096 bytes; no persistent data changes. Compare with request 06.
+}

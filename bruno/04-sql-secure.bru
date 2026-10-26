@@ -1,0 +1,22 @@
+meta {
+  name: SQL harmless tautology secure retest
+  type: http
+  seq: 4
+}
+get {
+  url: {{baseUrl}}/api/labs/sql?mode=secure&keyword=%27%20OR%201%3D1%20--%20
+  body: none
+  auth: none
+}
+tests {
+  test("Bound parameter treats the same input as data", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().count).to.equal(0);
+    expect(res.getBody().query).to.include("LIKE ?");
+  });
+}
+docs {
+  Same harmless input as request 03; HTTP 200 count 0. No DB mutation.
+  The query structure remains fixed; parameters hold the user input as data.
+  Error contract and validation are documented in docs/test-cases.md.
+}

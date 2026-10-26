@@ -1,0 +1,21 @@
+meta {
+  name: Secure catalog search
+  type: http
+  seq: 2
+}
+get {
+  url: {{baseUrl}}/api/services?keyword=gigi
+  body: none
+  auth: none
+}
+tests {
+  test("Bound search returns the dummy dental service", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().mode).to.equal("secure");
+    expect(res.getBody().count).to.equal(1);
+  });
+}
+docs {
+  keyword is optional, string up to 120 characters, no semicolon. Unknown parameters receive 400.
+  Expected HTTP 200 with one service. Read-only SQLite query with parameter binding.
+}
