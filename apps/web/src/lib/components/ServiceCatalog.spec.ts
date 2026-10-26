@@ -8,8 +8,40 @@ afterEach(() => {
   vi.unstubAllGlobals();
   localStorage.clear();
   securityMode.set('secure');
+  window.history.replaceState(null, '', '/');
 });
 describe("database catalog UI", () => {
+  it.each(['secure', 'vulnerable'] as const)('loads a URL keyword once using the saved %s setting', async (mode) => {
+    window.history.replaceState(null, '', '/services?keyword=%27%20OR%201%3D1%20--%20&mode=ignored');
+    saveSecurityMode(mode);
+    const urls: string[] = [];
+    vi.stubGlobal('fetch', async (url: string) => {
+      urls.push(url);
+      return new Response(JSON.stringify({ mode, keyword: "' OR 1=1 -- ", count: 0, services: [] }));
+    });
+    render(ServiceCatalog);
+    await screen.findByText('0 layanan tersedia');
+    expect((screen.getByLabelText('Cari layanan') as HTMLInputElement).value).toBe("' OR 1=1 -- ");
+    expect(urls).toEqual([`/api/services?keyword=%27+OR+1%3D1+--+&mode=${mode}`]);
+    await fireEvent.input(screen.getByLabelText('Cari layanan'), { target: { value: 'gigi' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Cari layanan' }));
+    await screen.findByText('0 layanan tersedia');
+    expect(urls).toEqual([
+      `/api/services?keyword=%27+OR+1%3D1+--+&mode=${mode}`,
+      `/api/services?keyword=gigi&mode=${mode}`
+    ]);
+  });
+  it('does not apply catalog URL input to the compact homepage preview', async () => {
+    window.history.replaceState(null, '', '/?keyword=gigi');
+    const urls: string[] = [];
+    vi.stubGlobal('fetch', async (url: string) => {
+      urls.push(url);
+      return new Response(JSON.stringify({ mode: 'secure', keyword: '', count: 0, services: [] }));
+    });
+    render(ServiceCatalog, { props: { compact: true } });
+    await screen.findByText(/Tidak ada layanan/);
+    expect(urls).toEqual(['/api/services?keyword=&mode=secure']);
+  });
   it('renders repeated service IDs returned by a SELECT-only query', async () => {
     const service = { id: 1, name: 'Konsultasi Umum', category: 'Umum', description: '<script>dummy</script>', duration: 30, price: 100000 };
     vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ count: 2, services: [service, service] })));

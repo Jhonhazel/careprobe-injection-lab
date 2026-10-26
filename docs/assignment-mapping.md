@@ -21,6 +21,20 @@ Pemetaan ini mengikuti persyaratan yang diberikan pengguna. PDF privat/slides as
 
 Permintaan konsultasi adalah simulasi persisten dalam memori; tidak ada pasien nyata, transaksi, telemedicine nyata, auth, layanan eksternal, Prisma, NestJS, Redis, migration, atau kode proprietary. ReallySick tidak disentuh.
 
-Mode hanya dipilih di Pengaturan dengan konfirmasi eksplisit dan localStorage. Secure adalah default; server tetap memvalidasi dan memeriksa sandbox. Source browser bukan otorisasi untuk melewati guard. Satu layanan search memakai SQL helper lama; ekspor memakai command helper lama; tidak ada implementasi sink duplikat.
+Mode frontend hanya dipilih di Pengaturan dengan konfirmasi eksplisit dan localStorage. Secure adalah default; server tetap memvalidasi dan memeriksa sandbox. Source browser bukan otorisasi untuk melewati guard. Satu layanan search memakai SQL helper lama; ekspor memakai command helper lama; tidak ada implementasi sink duplikat.
 
 Tabel konsultasi memakai koneksi SQLite yang sama. Insert terparameter membuka query_only hanya secara sinkron dan mengembalikannya di finally. Uji memastikan search rentan tetap read-only setelah insert.
+
+## Pengujian Injection melalui URL dan Query Parameter
+
+| Jenis | Source | Flow / sink | Control / retest |
+| --- | --- | --- | --- |
+| SQL | req.query.keyword dari URL API | GET /api/services → searchServices → SQLite prepare/step | Binding: payload encoded sama menghasilkan0 pada Secure,6 pada Vulnerable |
+| Command | req.query.documentTitle dari URL API | GET /api/consultations/:id/export → handler bersama POST → SQLite record → runCommand → shell | Secure fixed executable/separate args/allowlist menolak marker400; Docker gate tetap |
+| Command dari JSON | req.body.documentTitle dari request POST langsung atau form Riwayat | POST /api/consultations/:id/export → handler ekspor yang sama → runCommand | Kontrol dan hasil retest sama; JSON body bukan URL query |
+
+`req.params.id` adalah ID record yang divalidasi dan masuk lookup SQLite terparameter, bukan input yang mencapai sink shell. Tidak ada klaim injection melalui path. Validasi frontend saja tidak cukup: backend tetap memvalidasi kedua sumber HTTP.
+
+URL encoding hanya transport; parameter HTTP selalu untrusted. Settings/localStorage bukan otorisasi: direct caller dapat menentukan mode, namun tidak melewati guard. UI tidak menambah menu/tombol lab. Halaman /services?keyword=... membaca URL saat mount lalu menjalankan search nyata sekali; form normal tetap bekerja.
+
+Bukti HTTP aktual dan batas download browser ada di test-cases.md; panduan langkah/screenshot lengkap di README. Potensi CIA dan mitigasi/retest ada di lab-report.md. DOCX mahasiswa tidak dimodifikasi.

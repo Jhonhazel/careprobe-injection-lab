@@ -25,6 +25,7 @@
   }
   onMount(() => {
     loadSecurityMode();
+    if (!compact) keyword = new URLSearchParams(window.location.search).get('keyword') ?? '';
     void search();
   });
 </script>

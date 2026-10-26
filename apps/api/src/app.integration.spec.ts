@@ -3,6 +3,32 @@ import type { Express } from "express";
 import request from "supertest";
 import { createApp } from "./app.js";
 
+describe('direct encoded services URLs', () => {
+  let app: Express;
+  beforeAll(async () => { app = await createApp(); });
+  it.each([
+    ['keyword=gigi&mode=secure', 'gigi', 1, 'secure'],
+    ['keyword=gigi&mode=vulnerable', 'gigi', 1, 'vulnerable'],
+    ['keyword=%27%20OR%201%3D1%20--%20&mode=vulnerable', "' OR 1=1 -- ", 6, 'vulnerable'],
+    ['keyword=%27%20OR%201%3D1%20--%20&mode=secure', "' OR 1=1 -- ", 0, 'secure'],
+    ['keyword=%27%20OR%201%3D1%20--%20', "' OR 1=1 -- ", 0, 'secure'],
+    ['keyword=%27%20OR%201%3D1%20--%20&mode=invalid', "' OR 1=1 -- ", 0, 'secure'],
+    ['keyword=%2527%2520OR%25201%253D1%2520--%2520&mode=vulnerable', '%27%20OR%201%3D1%20--%20', 0, 'vulnerable']
+  ])('executes the decoded query exactly once: %s', async (query, keyword, count, mode) => {
+    const response = await request(app).get(`/api/services?${query}`);
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({ keyword, count, mode });
+    expect(response.body.services).toHaveLength(Number(count));
+  });
+  it.each(['keyword=one&keyword=two', `keyword=${'a'.repeat(121)}`, 'keyword=%3B&mode=vulnerable'])('rejects malformed keyword URL: %s', async (query) => {
+    const before = (await request(app).get('/api/services')).body.services;
+    const response = await request(app).get(`/api/services?${query}`);
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    expect((await request(app).get('/api/services')).body.services).toEqual(before);
+  });
+});
+
 describe("health API", () => {
   it("reports readiness as JSON", async () => {
     const response = await request(await createApp()).get("/api/health");
