@@ -5,26 +5,26 @@
   const links = [
     { href: '/', label: 'Beranda' },
     { href: '/services', label: 'Layanan' },
-    { href: '/labs/sql-injection', label: 'SQL Lab' },
-    { href: '/labs/command-injection', label: 'Command Lab' },
-    { href: '/report', label: 'Laporan' },
+    { href: '/consultations', label: 'Konsultasi' },
+    { href: '/history', label: 'Riwayat' },
+    { href: '/settings', label: 'Pengaturan' },
   ];
 </script>
 
 <a class="skip-link" href="#main">Lewati ke konten</a>
 <div class="top-strip">
   <div class="container">
-    <span><span class="dot"></span> LINGKUNGAN EDUKASI LOKAL</span><span
-      >TIG13 · Secure Application Development</span
+    <span><span class="dot"></span> LAYANAN KONSULTASI SIMULASI</span><span
+      >Mudah diakses dari rumah</span
     >
   </div>
 </div>
 <header class="site-header">
   <div class="container header-inner">
-    <a href="/" class="brand" aria-label="CareProbe Lab beranda"
+    <a href="/" class="brand" aria-label="CareProbe Health beranda"
       ><span class="brand-symbol" aria-hidden="true">✚</span><span
-        >CareProbe<span class="brand-light"> Lab</span><small
-          >CLINIC SECURITY LABORATORY</small
+        >CareProbe<span class="brand-light"> Health</span><small
+          >KONSULTASI KESEHATAN SIMULASI</small
         ></span
       ></a
     >
@@ -41,12 +41,12 @@
 <footer class="site-footer">
   <div class="container footer-inner">
     <a class="brand footer-brand" href="/"
-      >CareProbe <span class="brand-light">Lab</span></a
+      >CareProbe <span class="brand-light">Health</span></a
     >
     <p>
-      Data fiktif. Eksperimen terbatas. Pembelajaran nyata.<br />Hanya untuk
-      laboratorium pribadi di localhost — bukan layanan medis.
+      Simulasi layanan kesehatan — data fiktif.<br />Bukan layanan medis
+      nyata. Hanya tersedia di localhost.
     </p>
-    <span class="footer-tag">LOCAL ONLY ↗</span>
+    <span class="footer-tag">SIMULASI LOKAL</span>
   </div>
 </footer>

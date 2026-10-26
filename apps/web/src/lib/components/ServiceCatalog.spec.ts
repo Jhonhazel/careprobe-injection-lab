@@ -1,12 +1,35 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import ServiceCatalog from "./ServiceCatalog.svelte";
+import { saveSecurityMode, securityMode } from '../security-mode';
 
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  localStorage.clear();
+  securityMode.set('secure');
 });
 describe("database catalog UI", () => {
+  it('renders repeated service IDs returned by a SELECT-only query', async () => {
+    const service = { id: 1, name: 'Konsultasi Umum', category: 'Umum', description: '<script>dummy</script>', duration: 30, price: 100000 };
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ count: 2, services: [service, service] })));
+    const { container } = render(ServiceCatalog);
+    await screen.findByText('2 layanan tersedia');
+    expect(screen.getAllByText('Konsultasi Umum')).toHaveLength(2);
+    expect(container.querySelector('script')).toBeNull();
+  });
+  it('shows a loading state and prevents a second search while pending', async () => {
+    vi.stubGlobal('fetch', () => new Promise(() => {}));
+    render(ServiceCatalog);
+    expect(screen.getByRole('status').textContent).toContain('Memuat');
+    expect((screen.getByRole('button') as HTMLButtonElement).disabled).toBe(true);
+  });
+  it('explains an empty proxy 500 response without inventing results', async () => {
+    vi.stubGlobal('fetch', async () => new Response('', { status: 500 }));
+    render(ServiceCatalog);
+    expect((await screen.findByRole('alert')).textContent).toContain('Docker Compose');
+    expect(screen.queryByText(/layanan tersedia/)).toBeNull();
+  });
   it("loads services and searches using the secure browsing endpoint", async () => {
     const urls: string[] = [];
     vi.stubGlobal("fetch", async (url: string) => {
@@ -38,9 +61,25 @@ describe("database catalog UI", () => {
     await fireEvent.click(screen.getByRole("button", { name: "Cari layanan" }));
     await screen.findByText("1 layanan tersedia");
     expect(urls).toEqual([
-      "/api/services?keyword=",
-      "/api/services?keyword=gigi",
+      "/api/services?keyword=&mode=secure",
+      "/api/services?keyword=gigi&mode=secure",
     ]);
+  });
+  it('uses the persisted setting without a mode selector or SQL panel', async () => {
+    saveSecurityMode('vulnerable');
+    let requested = '';
+    vi.stubGlobal('fetch', async (url: string) => {
+      requested = url;
+      return new Response(JSON.stringify({ mode: 'vulnerable', keyword: '', count: 0, services: [] }));
+    });
+    render(ServiceCatalog);
+    await screen.findByText(/Tidak ada layanan/);
+    await fireEvent.input(screen.getByLabelText('Cari layanan'), { target: { value: "' OR 1=1 -- " } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Cari layanan' }));
+    await screen.findByText(/Tidak ada layanan/);
+    expect(requested).toBe('/api/services?keyword=%27+OR+1%3D1+--+&mode=vulnerable');
+    expect(screen.queryByRole('combobox')).toBeNull();
+    expect(screen.queryByText(/Parameter binding|SELECT/)).toBeNull();
   });
   it("shows empty and offline states without invented service cards", async () => {
     vi.stubGlobal(

@@ -16,6 +16,6 @@ tests {
   });
 }
 docs {
-  keyword is optional, string up to 120 characters, no semicolon. Unknown parameters receive 400.
+  keyword is optional, string up to 120 characters, no semicolon. mode accepts secure/vulnerable; missing or invalid mode falls back to secure. Other unknown parameters receive 400.
   Expected HTTP 200 with one service. Read-only SQLite query with parameter binding.
 }

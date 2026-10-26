@@ -1,11 +1,13 @@
 import express, { type ErrorRequestHandler } from "express";
 import { z } from "zod";
-import { createDatabase, searchServices } from "./database.js";
+import { createDatabase, searchServices, createConsultation, readConsultations } from "./database.js";
 import { LabError } from "./errors.js";
 import { runCommand } from "./command.js";
 import { sandboxReady } from "./sandbox.js";
 
 const keywordSchema = z.string().max(120).default("");
+// Product endpoints fail safely to secure for missing or invalid preferences.
+const productModeSchema = z.enum(["secure", "vulnerable"]).catch("secure");
 const sqlSchema = z.strictObject({
   mode: z.enum(["secure", "vulnerable"]).default("secure"),
   keyword: keywordSchema,
@@ -53,15 +55,46 @@ export async function createApp() {
     });
   });
   app.get("/api/services", (req, res) => {
-    const { keyword } = z
-      .strictObject({ keyword: keywordSchema })
+    const { keyword, mode } = z
+      .strictObject({ keyword: keywordSchema, mode: productModeSchema })
       .parse(req.query);
-    const { services, count } = searchServices(db, keyword);
-    res.json({ mode: "secure", keyword, services, count });
+    const { services, count } = searchServices(db, keyword, mode);
+    res.json({ mode, keyword, services, count });
   });
   app.get("/api/labs/sql", (req, res) => {
     const { mode, keyword } = sqlSchema.parse(req.query);
     res.json(searchServices(db, keyword, mode));
+  });
+  app.get('/api/consultations', (_req, res) => {
+    res.json({ consultations: readConsultations(db) });
+  });
+  app.post('/api/consultations', (req, res) => {
+    const input = z.strictObject({
+      serviceId: z.number().int().positive().max(999999999),
+      patientName: z.string().trim().min(2).max(60),
+      reason: z.string().trim().min(3).max(500)
+    }).parse(req.body);
+    res.status(201).json({ consultation: createConsultation(db, input) });
+  });
+  app.post('/api/consultations/:id/export', async (req, res) => {
+    const id = Number(z.string().regex(/^[1-9]\d{0,8}$/).parse(req.params.id));
+    const { mode, documentTitle } = z.strictObject({
+      mode: productModeSchema,
+      documentTitle: z.string().min(1).max(80).default('ringkasan-konsultasi')
+    }).parse(req.body);
+    const consultation = readConsultations(db, id)[0];
+    if (!consultation) throw new LabError(404, 'CONSULTATION_NOT_FOUND', 'Konsultasi tidak ditemukan.');
+    // Reuse the existing bounded formatter and Docker guard; no new command sink or paths.
+    const { output } = await runCommand(mode, documentTitle);
+    const title = output.replace(/^diagnostic: /, '').trimEnd();
+    const summary = [
+      'CareProbe Health — Ringkasan Konsultasi', `Judul: ${title}`, '',
+      `ID konsultasi: ${consultation.id}`, `Layanan: ${consultation.serviceName}`,
+      `Tanggal: ${consultation.createdAt}`, `Pasien demo: ${consultation.patientName}`,
+      `Alasan: ${consultation.reason}`, `Status: ${consultation.status}`, '',
+      'Simulasi layanan kesehatan — data fiktif. Bukan dokumen medis.'
+    ].join('\n');
+    res.attachment(`careprobe-konsultasi-${id}.txt`).type('text/plain').send(summary);
   });
   app.post("/api/labs/command", async (req, res) => {
     const { mode, label } = z

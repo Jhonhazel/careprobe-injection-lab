@@ -1,0 +1,13 @@
+meta {
+  name: Consultation history
+  type: http
+  seq: 7
+}
+get {
+  url: {{baseUrl}}/api/consultations
+  body: none
+  auth: none
+}
+docs {
+  Expected 200 {consultations:[...]}, seeded and submitted fictional records with serviceName. Read-only.
+}

@@ -11,9 +11,22 @@ export interface Service {
   price: number;
 }
 
+export interface ConsultationInput {
+  serviceId: number;
+  patientName: string;
+  reason: string;
+}
+export interface Consultation extends ConsultationInput {
+  id: number;
+  serviceName: string;
+  status: 'PENDING';
+  createdAt: string;
+}
+
 export async function createDatabase() {
   const SQL = await initSqlJs();
   const db = new SQL.Database();
+  db.run('PRAGMA foreign_keys = ON');
   db.run(`CREATE TABLE services (
     id INTEGER PRIMARY KEY, name TEXT NOT NULL, category TEXT NOT NULL,
     description TEXT NOT NULL, duration INTEGER NOT NULL, price INTEGER NOT NULL
@@ -72,9 +85,53 @@ export async function createDatabase() {
       [row.name, row.category, row.description, row.duration, row.price],
     );
   }
-  // Defense in depth: runtime SQL exercises can only read this disposable database.
+  db.run(`CREATE TABLE consultations (
+    id INTEGER PRIMARY KEY, serviceId INTEGER NOT NULL REFERENCES services(id),
+    patientName TEXT NOT NULL, reason TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING', createdAt TEXT NOT NULL
+  )`);
+  db.run('INSERT INTO consultations (serviceId, patientName, reason, createdAt) VALUES (?, ?, ?, ?)',
+    [1, 'Alya Demo', 'Simulasi konsultasi kesehatan umum.', '2026-10-01T09:00:00.000Z']);
+  db.run('INSERT INTO consultations (serviceId, patientName, reason, createdAt) VALUES (?, ?, ?, ?)',
+    [2, 'Bima Demo', 'Simulasi pemeriksaan gigi rutin.', '2026-10-02T09:00:00.000Z']);
+  // SQL exercises always run read-only. Only the synchronous, bound insert below unlocks writes.
   db.run("PRAGMA query_only = ON");
   return db;
+}
+
+export function readConsultations(db: Database, id?: number): Consultation[] {
+  const statement = db.prepare(`SELECT c.id, c.serviceId, s.name AS serviceName,
+    c.patientName, c.reason, c.status, c.createdAt
+    FROM consultations c JOIN services s ON s.id = c.serviceId
+    ${id === undefined ? '' : 'WHERE c.id = ?'} ORDER BY c.id DESC`);
+  try {
+    statement.bind(id === undefined ? [] : [id]);
+    const rows: Consultation[] = [];
+    while (statement.step()) {
+      const row = statement.getAsObject();
+      rows.push({ id: Number(row.id), serviceId: Number(row.serviceId), serviceName: String(row.serviceName),
+        patientName: String(row.patientName), reason: String(row.reason), status: 'PENDING', createdAt: String(row.createdAt) });
+    }
+    return rows;
+  } finally { statement.free(); }
+}
+
+export function createConsultation(db: Database, input: ConsultationInput): Consultation {
+  const service = db.prepare('SELECT id FROM services WHERE id = ?');
+  try {
+    service.bind([input.serviceId]);
+    if (!service.step()) throw new LabError(404, 'SERVICE_NOT_FOUND', 'Layanan tidak ditemukan. Pilih layanan yang tersedia.');
+  } finally { service.free(); }
+  // sql.js operations here are synchronous: no other request can run while writes are enabled.
+  db.run('PRAGMA query_only = OFF');
+  try {
+    db.run('INSERT INTO consultations (serviceId, patientName, reason, createdAt) VALUES (?, ?, ?, ?)',
+      [input.serviceId, input.patientName, input.reason, new Date().toISOString()]);
+    const id = Number(db.exec('SELECT last_insert_rowid()')[0].values[0][0]);
+    return readConsultations(db, id)[0];
+  } finally {
+    db.run('PRAGMA query_only = ON');
+  }
 }
 
 export function searchServices(

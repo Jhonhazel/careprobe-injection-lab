@@ -1,0 +1,19 @@
+meta {
+  name: Create fictional consultation
+  type: http
+  seq: 8
+}
+post {
+  url: {{baseUrl}}/api/consultations
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+}
+body:json {
+  {"serviceId":2,"patientName":"Rani Bruno Demo","reason":"Simulasi pemeriksaan gigi."}
+}
+docs {
+  Expected 201 {consultation}. Writes one row to in-memory SQLite. Name trim 2-60, reason trim 3-500, service ID positive and existing. Invalid400; missing service404. Not idempotent; do not retry blindly.
+}

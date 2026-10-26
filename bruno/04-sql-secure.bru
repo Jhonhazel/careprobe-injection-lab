@@ -4,7 +4,7 @@ meta {
   seq: 4
 }
 get {
-  url: {{baseUrl}}/api/labs/sql?mode=secure&keyword=%27%20OR%201%3D1%20--%20
+  url: {{baseUrl}}/api/services?mode=secure&keyword=%27%20OR%201%3D1%20--%20
   body: none
   auth: none
 }
@@ -12,7 +12,7 @@ tests {
   test("Bound parameter treats the same input as data", function () {
     expect(res.getStatus()).to.equal(200);
     expect(res.getBody().count).to.equal(0);
-    expect(res.getBody().query).to.include("LIKE ?");
+    expect(res.getBody().query).to.equal(undefined);
   });
 }
 docs {

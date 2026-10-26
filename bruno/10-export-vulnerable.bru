@@ -1,0 +1,19 @@
+meta {
+  name: Summary harmless marker demonstration
+  type: http
+  seq: 10
+}
+post {
+  url: {{baseUrl}}/api/consultations/1/export
+  body: json
+  auth: none
+}
+headers {
+  Content-Type: application/json
+}
+body:json {
+  {"mode":"vulnerable","documentTitle":"clinic-demo; printf LAB_MARKER"}
+}
+docs {
+  Only isolated local Docker. Expected TXT includes Judul: clinic-demo followed by an extra LAB_MARKER line and the selected consultation. Reuses existing restricted sink. No DB/file writes. Do not expand payload grammar.
+}

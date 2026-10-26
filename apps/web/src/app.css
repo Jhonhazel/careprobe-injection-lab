@@ -28,7 +28,8 @@ a {
 }
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 button,
@@ -49,6 +50,7 @@ a:focus-visible,
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
+textarea:focus-visible,
 summary:focus-visible {
   outline: 3px solid #d08b20;
   outline-offset: 4px;
@@ -676,7 +678,8 @@ label {
   color: #38585f;
 }
 input,
-select {
+select,
+textarea {
   display: block;
   width: 100%;
   min-height: 45px;
@@ -688,7 +691,8 @@ select {
   font-size: 0.83rem;
 }
 input:disabled,
-select:disabled {
+select:disabled,
+textarea:disabled {
   background: #f5f8f7;
 }
 .mode-note {
@@ -889,6 +893,7 @@ pre.terminal {
 }
 .search-form > div {
   flex: 1;
+  min-width: 0;
 }
 .search-form > .button {
   white-space: nowrap;
@@ -948,6 +953,77 @@ tbody tr:last-child > * {
 }
 .evidence-card .panel-heading {
   margin-bottom: 12px;
+}
+.consultation-form {
+  max-width: 720px;
+}
+.consultation-form h2,
+.consultation-form .muted {
+  margin-bottom: 14px;
+}
+.consultation-form label {
+  margin-top: 19px;
+}
+.consultation-form .button {
+  margin-top: 22px;
+}
+.consultation-list {
+  display: grid;
+  gap: 17px;
+}
+.consultation-record p + p {
+  margin-top: 8px;
+}
+.consultation-reason {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.export-form {
+  display: flex;
+  align-items: end;
+  gap: 18px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.export-form > div {
+  flex: 1;
+  min-width: 0;
+}
+.export-form .field-help {
+  margin-bottom: 0;
+}
+.export-form .button {
+  flex-shrink: 0;
+}
+.settings-panel {
+  max-width: 750px;
+}
+.settings-panel fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.settings-panel legend {
+  font-size: 1.15rem;
+  font-weight: 650;
+  margin-bottom: 18px;
+}
+.mode-choice {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: 18px;
+  font-size: 0.88rem;
+}
+.mode-choice input {
+  width: auto;
+  min-height: 0;
+  accent-color: var(--teal);
+}
+.settings-panel fieldset p {
+  margin-left: 27px;
+  font-size: 0.75rem;
 }
 @media (min-width: 1440px) {
   .hero-grid {
@@ -1024,7 +1100,7 @@ tbody tr:last-child > * {
   }
   .header-inner nav {
     width: 100%;
-    justify-content: space-between;
+    overflow-x: auto;
     gap: 3px;
   }
   .header-inner nav a {
@@ -1164,6 +1240,13 @@ tbody tr:last-child > * {
   }
   .lab-card-footer {
     font-size: 0.6rem;
+  }
+  .export-form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .export-form .button {
+    align-self: flex-start;
   }
 }
 @media (prefers-reduced-motion: reduce) {

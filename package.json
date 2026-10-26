@@ -12,6 +12,7 @@
     "preview": "pnpm --filter @careprobe/web preview",
     "lab:up": "docker compose up --build -d --wait",
     "lab:down": "docker compose down",
-    "test:docker": "node scripts/test-docker.mjs"
+    "test:docker": "node scripts/test-docker.mjs",
+    "test:smoke": "node scripts/smoke-web.mjs"
   }
 }
