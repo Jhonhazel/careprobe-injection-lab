@@ -139,3 +139,36 @@ describe("database catalog UI", () => {
     expect(screen.queryByText("Pemeriksaan Gigi")).toBeNull();
   });
 });
+
+describe('bounded search summary rendering', () => {
+  const fragment = `<button onclick="this.nextElementSibling.textContent='XSS_MARKER'">Uji marker</button>`;
+  it.each(['secure', 'vulnerable'] as const)('confines active HTML to the exact marker in %s mode', async mode => {
+    saveSecurityMode(mode);
+    window.history.replaceState(null, '', `/services?keyword=${encodeURIComponent(fragment)}`);
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ count: 0, services: [] })));
+    const { container } = render(ServiceCatalog);
+    await screen.findByText('0 layanan tersedia');
+    expect(container.querySelector('[data-xss-boundary] button') !== null).toBe(mode === 'vulnerable');
+    if (mode === 'secure') expect(container.querySelector('[data-search-keyword]')?.textContent).toBe(fragment);
+    // DOM tests establish the boundary, not browser execution of onclick.
+  });
+  it('escapes arbitrary active input even in vulnerable mode', async () => {
+    saveSecurityMode('vulnerable');
+    window.history.replaceState(null, '', '/services?keyword=' + encodeURIComponent('<img src=x onerror=alert(1)>'));
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ count: 0, services: [] })));
+    const { container } = render(ServiceCatalog);
+    await screen.findByText('0 layanan tersedia');
+    expect(container.querySelector('img')).toBeNull();
+    expect(container.querySelector('[data-search-keyword]')?.textContent).toContain('<img');
+  });
+});
+
+it.each(['secure', 'vulnerable'] as const)('keeps normal keyword summary and actual catalog response in %s', async mode => {
+  saveSecurityMode(mode);
+  window.history.replaceState(null, '', '/services?keyword=gigi');
+  vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ count: 1, services: [{ id: 2, name: 'Pemeriksaan Gigi', category: 'Pemeriksaan', description: 'Dummy', duration: 45, price: 120000 }] })));
+  const { container } = render(ServiceCatalog);
+  await screen.findByText('1 layanan tersedia');
+  expect(container.querySelector('[data-search-keyword]')?.textContent).toBe('gigi');
+  expect(container.querySelector('[data-xss-boundary]')).toBeNull();
+});

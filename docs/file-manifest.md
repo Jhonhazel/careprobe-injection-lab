@@ -1,5 +1,24 @@
 # Manifest CareProbe Health
 
+## Materi 9 — Client Side Security: XSS dan CSRF
+
+Perubahan lokal dibanding HEAD146283001a0b026ea22ce354f358a9ede5f84dee (baseline bersih). Tidak ada commit/push/deploy.
+
+| Berkas | Tujuan |
+| --- | --- |
+| apps/api/src/app.ts | Pasang router sesi; pengecualian Origin hanya POST reminder dari4180, dengan mode gate di router. |
+| apps/api/src/demo-session.ts | Sesi memori terbatas, random HttpOnly cookie, sinkronisasi mode tepercaya, token dan preferensi pengingat. |
+| apps/api/src/demo-session.integration.spec.ts | Regresi sesi, cookie, token, Origin, state dan GET nonmutating. |
+| apps/web/src/lib/xss-demo.ts | Satu fragmen handler marker exact, tanpa script bebas. |
+| apps/web/src/lib/components/ServiceCatalog.svelte | Ringkasan keyword escaped; boundary aktif exact hanya mode Vulnerable. |
+| apps/web/src/lib/components/ServiceCatalog.spec.ts | Normal kedua mode, boundary exact, Secure escaped dan input lain aman. |
+| apps/web/src/routes/settings/+page.svelte | Sinkronisasi satu mode ke sesi, update/reload preferensi dengan token dan feedback. |
+| apps/web/src/lib/settings.spec.ts | Pertahankan tes konfirmasi mode dengan API sesi. |
+| scripts/serve-csrf.mjs, scripts/fixtures/csrf.html | Server statis loopback4180 dan form eksplisit ke preview4173. |
+| README.md, docs/assignment-mapping.md, docs/lab-report.md, docs/test-cases.md, docs/file-manifest.md | Prosedur Materi9, source/flow/sink/control, hasil aktual, batas dan manifest. |
+| docs/evidence/m9-xss-vulnerable.png, docs/evidence/m9-xss-secure.png, docs/evidence/m9-csrf-vulnerable.png, docs/evidence/m9-csrf-secure.png | Screenshot konten tab aktual tanpa secret; address bar/DevTools ditangkap terpisah mahasiswa. |
+
+
 ## Tambahan pengujian URL pada working tree saat ini
 
 Bagian berikut mencatat perubahan setelah refactor produk di bawah, dibanding HEAD `817b5bba12c7f63c710fa6859cbd40911ee89811`. Semua perubahan lokal; belum di-commit, push, atau deploy. Tidak ada dependency, sink command baru, atau perubahan Docker.
@@ -82,7 +101,7 @@ Refactor lokal pada branch `codex/careprobe-health-refactor`, dibanding baseline
 
 ## Semua berkas proyek
 
-87 berkas sumber, konfigurasi, tes, dokumentasi dan bukti terpilih. Dependensi/build/secret/referensi privat dikecualikan.
+96 berkas sumber, konfigurasi, tes, dokumentasi dan bukti terpilih. Dependensi/build/secret/referensi privat dikecualikan.
 
 - [.dockerignore](../.dockerignore)
 - [.gitignore](../.gitignore)
@@ -171,3 +190,13 @@ Refactor lokal pada branch `codex/careprobe-health-refactor`, dibanding baseline
 - [pnpm-workspace.yaml](../pnpm-workspace.yaml)
 - [scripts/smoke-web.mjs](../scripts/smoke-web.mjs)
 - [scripts/test-docker.mjs](../scripts/test-docker.mjs)
+
+- [apps/api/src/demo-session.integration.spec.ts](../apps/api/src/demo-session.integration.spec.ts)
+- [apps/api/src/demo-session.ts](../apps/api/src/demo-session.ts)
+- [apps/web/src/lib/xss-demo.ts](../apps/web/src/lib/xss-demo.ts)
+- [docs/evidence/m9-csrf-secure.png](../docs/evidence/m9-csrf-secure.png)
+- [docs/evidence/m9-csrf-vulnerable.png](../docs/evidence/m9-csrf-vulnerable.png)
+- [docs/evidence/m9-xss-secure.png](../docs/evidence/m9-xss-secure.png)
+- [docs/evidence/m9-xss-vulnerable.png](../docs/evidence/m9-xss-vulnerable.png)
+- [scripts/fixtures/csrf.html](../scripts/fixtures/csrf.html)
+- [scripts/serve-csrf.mjs](../scripts/serve-csrf.mjs)

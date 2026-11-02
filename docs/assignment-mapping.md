@@ -38,3 +38,13 @@ Tabel konsultasi memakai koneksi SQLite yang sama. Insert terparameter membuka q
 URL encoding hanya transport; parameter HTTP selalu untrusted. Settings/localStorage bukan otorisasi: direct caller dapat menentukan mode, namun tidak melewati guard. UI tidak menambah menu/tombol lab. Halaman /services?keyword=... membaca URL saat mount lalu menjalankan search nyata sekali; form normal tetap bekerja.
 
 Bukti HTTP aktual dan batas download browser ada di test-cases.md; panduan langkah/screenshot lengkap di README. Potensi CIA dan mitigasi/retest ada di lab-report.md. DOCX mahasiswa tidak dimodifikasi.
+
+## Materi 9 — Client Side Security: XSS dan CSRF
+
+| Topik | Source → flow → sink | Control / retest |
+| --- | --- | --- |
+| Reflected XSS melalui URL, rendering DOM klien | keyword → ServiceCatalog ringkasan → @html hanya exact tombol HTML marker | Interpolasi Svelte Secure; payload sama escaped; input aktif lain selalu teks |
+| CSRF sesi | Form origin4180 → cookie otomatis → POST reminder → session.reminder | Token sesi + Origin Secure;403 dan state tetap; kontrol sah200 |
+| Konteks sesi | Settings → POST session dengan Origin+header khusus | Mode disimpan server, target reminder menolak mode request; HttpOnly/Lax/path sempit/expiry |
+
+SOURCE/FLOW/SINK/CONTROL/EVIDENCE/DAMPAK/MITIGASI/RETEST, prosedur dan checklist lengkap ada pada README bagian Materi9 dan hasil aktual di test-cases.md. Refleksi XSS terjadi pada DOM, bukan respons server. Origin berbeda port tetap same-site; tidak diklaim arbitrary cross-site cookie bypass. Tidak ada akun nyata, notifikasi, token theft atau perubahan DOCX.

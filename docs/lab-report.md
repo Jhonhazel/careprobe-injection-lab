@@ -92,3 +92,20 @@ URL encoding bukan mitigasi; Settings bukan autentikasi/otorisasi server. Direct
 | SQL rentan / Secure, input encoded sama | **belum diisi** | **isi setelah diuji** | **isi** |
 | GET TXT normal dan marker rentan | **belum diisi** | **catat sumber HTTP atau browser** | **isi** |
 | GET marker Secure | **belum diisi** | **400 dan tanpa attachment** | **isi** |
+
+## Materi 9 — Client Side Security: XSS dan CSRF
+
+Gunakan prosedur README dan hasil aktual test-cases.md sebagai referensi; bukti mahasiswa tetap diisi setelah capture sendiri.
+
+| Urutan analisis | XSS | CSRF |
+| --- | --- | --- |
+| SOURCE | keyword URL, fragmen tombol HTML exact | Form user-triggered origin4180 |
+| FLOW | URL → ServiceCatalog → ringkasan | Browser cookie → proxy → Express session |
+| SINK | @html / DOM button onclick | assignment session.reminder |
+| CONTROL | Interpolasi teks Secure, exact gate pada lab | CSRF token sesi + Origin; cookie Lax/HttpOnly |
+| EVIDENCE | isi span marker Vulnerable vs teks Secure |200/state berubah vs403/state tetap; cookie otomatis harus diamati browser |
+| DAMPAK | Potensi manipulasi konten browser; lab hanya marker | Potensi perubahan state tanpa niat pengguna; lab preferensi fiktif |
+| MITIGASI | Output handling konteks tepat, CSP defense in depth | Token, Origin, cookie policy, metode POST |
+| RETEST | URL identik Secure, tanpa tombol HTML aktif | Form identik Secure ditolak, kontrol sah berhasil |
+
+Catat waktu, URL, mode, status, nilai preferensi sebelum/sesudah dan screenshot. Tutup nilai cookie/token/ID sesi. XSS secara teknis DOM-reflected; tidak ada stored XSS. Tidak ada klaim session hijacking atau pasien nyata. DOCX tidak otomatis diperbarui.
