@@ -127,3 +127,20 @@ Judul/label normal 1–40 ASCII huruf/angka/underscore/hyphen. Vulnerable hanya 
 - Bruno CLI/aplikasi tidak dijalankan; collection diperbarui untuk request yang ekuivalen dengan tes API/Docker. Ini bukan klaim collection telah lulus melalui Bruno.
 - Pemeriksaan responsif terbatas desktop1280 dan mobile390, bukan seluruh perangkat/browser atau audit aksesibilitas menyeluruh.
 - Data reset pada restart; tidak ada auth, persistence disk, layanan medis, atau deployment publik.
+
+## Materi 9 — Client Side Security: XSS dan CSRF (2 November 2026)
+
+Baseline aktual sebelum perubahan: branch codex/careprobe-health-refactor bersih, HEAD146283001a0b026ea22ce354f358a9ede5f84dee; 116 API/unit +20 UI =136 lulus. Angka 26 Oktober di atas merupakan bukti historis.
+
+- NODE_ENV=test pnpm test:117 API/unit +25 UI =142 lulus. Satu skenario integrasi CSRF mencakup cookie, inisialisasi, token missing/invalid/session lain, request sah, GET nonmutating, mode sync terlindungi, origin rentan tepat, origin lain ditolak, dan sesi wajib. Tes UI memeriksa exact gate HTML, teks Secure, input aktif lain escaped, keyword normal kedua mode, persistensi mode, dan consultation reason tetap escaped.
+- pnpm check:0 error/0 warning. pnpm build:berhasil, API tsc + frontend adapter-node.
+- pnpm test:docker:53 pemeriksaan lulus, termasuk guard sebelum marker shell, SQL0/6, GET/POST export serta record nyata. Tidak ada perubahan sandbox/database/command helper.
+- pnpm test:smoke:13 pemeriksaan lulus pada preview lokal dan API Docker, lima menu tetap.
+- RED diamati: endpoint sesi404 sebelum implementasi. Fragmen SVG percobaan tidak menghasilkan event pada browser; tidak diklaim berhasil dan diganti dengan exact tombol onclick user-triggered.
+- Browser Chrome: URL exact tombol + mode Vulnerable, klik Uji marker mengisi span data-xss-marker menjadi XSS_MARKER (DOM aktif benar-benar teramati). Retest Secure input identik: escaped text, tidak ada tombol aktif atau span marker. Ini bukan sekadar pemformatan HTML.
+- Browser CSRF: sesi dibuat lewat Settings; pengingat Nonaktif. Form biasa origin4180 tanpa cookie/token eksplisit mengirim POST ke4173; response JSON vulnerable/reminder:true, reload Settings menjadi Aktif. Cookie otomatis dibuktikan oleh penerimaan request melalui lookup sesi wajib dan state sesi korban yang sama; nilai cookie tidak dibaca/disimpan dalam bukti. Screenshot header cookie DevTools dengan nilai ditutup masih perlu ditangkap mahasiswa.
+- Browser Secure: kontrol sah mengembalikan Nonaktif; form4180 yang sama menghasilkan CSRF_REJECTED, reload tetap Nonaktif; kontrol sah dengan token kemudian berhasil Aktif. Status200/403 tepat juga diverifikasi integrasi API. Screenshot tab tidak mencakup Network/status/header, jadi jangan klaim screenshot Network telah tersedia.
+
+Bukti konten tab aktual: evidence/m9-xss-vulnerable.png, m9-xss-secure.png, m9-csrf-vulnerable.png, m9-csrf-secure.png. Tidak berisi cookie/token. Checklist address bar, source dan DevTools lengkap ada di README; tidak ada screenshot yang direkayasa. Browser ditinggalkan dalam mode Secure sebelum shutdown.
+
+Batas: XSS adalah refleksi URL ke DOM klien dengan klik, bukan server-reflected HTML atau stored XSS. Handler hanya tepat fragmen allowlisted; arbitrary HTML tetap escaped. Tidak ada CSP global sebelumnya; tidak ada CSP global dinonaktifkan. CSRF lintas port adalah cross-origin tetapi same-site; tidak menguji arbitrary cross-site Lax POST. Cookie Secure flag tidak digunakan pada HTTP loopback; HttpOnly/Lax/path sempit/max-age aktif. Map maksimal100 sesi/1jam/reset startup, bukan sistem login. Tidak ada brute-force/stress/expiry browser panjang yang dijalankan. Egress Docker tetap belum diblokir. Tidak ada akun/pasien nyata, token theft, DOCX changes, deploy atau akses ReallySick.

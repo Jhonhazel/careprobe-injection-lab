@@ -2,7 +2,7 @@
 
 **Telekonsultasi simulasi lokal** untuk TIG13 Secure Application Development, Material 8: Injection Testing. Pengguna dapat mencari layanan, mengajukan konsultasi fiktif, melihat riwayat, dan mengunduh ringkasan TXT. Ini bukan layanan medis nyata.
 
-SvelteKit + TypeScript → proxy `/api` localhost → Express + TypeScript → SQLite sungguhan (`sql.js`, di memori). Dua aplikasi pnpm, tanpa database eksternal, autentikasi, atau layanan cloud. Ekspor judul ringkasan benar-benar memakai proses Linux, **hanya di Docker sandbox**. SQL dan command helper MVP digunakan kembali; tidak ada dependency baru.
+SvelteKit + TypeScript → proxy `/api` localhost → Express + TypeScript → SQLite sungguhan (`sql.js`, di memori). Dua aplikasi pnpm, tanpa database eksternal, akun nyata, atau layanan cloud; sesi demo memori hanya untuk preferensi pengingat. Ekspor judul ringkasan benar-benar memakai proses Linux, **hanya di Docker sandbox**. SQL dan command helper MVP digunakan kembali; tidak ada dependency baru.
 
 ## Peringatan keamanan
 
@@ -155,7 +155,7 @@ Referensi PDF, konfigurasi `.env*`, dependensi, hasil build, dan screenshot di l
 - `GET /api/consultations/:id/export?documentTitle=...&mode=...` atau `POST /api/consultations/:id/export` dengan `{documentTitle,mode}` → TXT attachment UTF-8. ID bilangan positif maksimal sembilan digit; title default `ringkasan-konsultasi`, mode hilang/invalid secure. Hanya suffix marker tetap diperbolehkan di vulnerable.
 - Error berbentuk `{error:{code,message}}`; validasi 400, record/layanan tidak ada 404, sandbox tidak siap 503, sibuk 429, batas command 504. Body dibatasi 2 KiB, termasuk karakter multibyte.
 
-Tidak ada autentikasi: seluruh konsultasi simulasi dapat dilihat setiap pengguna lokal. Database di memori reset saat restart. Aplikasi tidak menyediakan penanganan medis, video call, pembayaran, atau penyimpanan rekam medis. Batas detail dan bukti aktual: [test-cases.md](docs/test-cases.md).
+Tidak ada autentikasi akun (sesi demo hanya untuk preferensi pengingat): seluruh konsultasi simulasi dapat dilihat setiap pengguna lokal. Database di memori reset saat restart. Aplikasi tidak menyediakan penanganan medis, video call, pembayaran, atau penyimpanan rekam medis. Batas detail dan bukti aktual: [test-cases.md](docs/test-cases.md).
 
 ## Pengujian Injection melalui URL dan Query Parameter
 
@@ -277,3 +277,69 @@ Dampak potensial SQL mencakup terbukanya record di luar filter (confidentiality)
 - [ ] Catat tanggal, mode, ID dan sumber bukti; hasil yang belum dijalankan tetap ditulis belum diuji.
 
 Screenshot pengembang dalam docs/evidence menampilkan konten tab; address bar dan DevTools lengkap tetap perlu ditangkap mahasiswa. Laporan DOCX yang sudah diserahkan tidak diubah.
+
+## Materi 9 — Client Side Security: XSS dan CSRF
+
+Dua demonstrasi ini memakai lima halaman produk yang sama. Tidak ada akun nyata. SQL/command helper dan pembatas Docker tidak berubah. Cookie sesi demo hanya untuk preferensi pengingat, bukan autentikasi konsultasi atau otorisasi SQL/command.
+
+### XSS: refleksi keyword URL pada DOM
+
+SOURCE → `keyword` URL atau pencarian → FLOW `ServiceCatalog`/ringkasan → SINK Svelte `{@html submittedKeyword}` → CONTROL Secure memakai interpolasi teks Svelte. Dalam istilah materi ini contoh reflected XSS melalui URL; secara teknis refleksi terjadi di DOM klien setelah mount, bukan HTML respons Express. Tidak ada stored XSS.
+
+Fragmen aktif yang diizinkan harus persis (tanpa spasi tambahan):
+
+```html
+<button onclick="this.nextElementSibling.textContent='XSS_MARKER'">Uji marker</button>
+```
+
+Handler tombol HTML yang benar-benar dijalankan browser hanya mengubah span marker tepat sesudah tombol HTML. `XSS_MARKER` pada teks payload Secure bukan bukti eksekusi: bukti adalah span `[data-xss-marker]` yang terisi, dan tombol HTML aktif hanya pada cabang rentan. Semua input aktif lain tetap escaped bahkan dalam Vulnerable; tidak ada script bebas, fetch, redirect atau pembacaan cookie. Efek juga terlihat bila query SQL rentan menolak keyword: ringkasan independen dari hasil SQL.
+
+1. Jalankan `pnpm lab:up`, `pnpm build`, lalu `pnpm preview` (:4173).
+2. Buka Pengaturan pada `http://127.0.0.1:4173/settings`, pilih Vulnerable dan konfirmasi. Tunggu sesi aktif.
+3. Buka URL berikut langsung:
+
+```text
+http://127.0.0.1:4173/services?keyword=%3Cbutton%20onclick%3D%22this.nextElementSibling.textContent%3D%27XSS_MARKER%27%22%3EUji%20marker%3C%2Fbutton%3E
+```
+
+4. Klik Uji marker yang muncul pada ringkasan; periksa efek marker; buka DevTools Elements untuk melihat span marker terisi.
+5. Pilih Secure di Pengaturan lalu buka URL identik. Fragmen muncul sebagai teks, tanpa tombol HTML aktif/span marker.
+6. Cari `gigi` pada kedua mode: katalog tetap satu layanan. Mode tersimpan saat refresh.
+
+DAMPAK potensial rendering aktif pada aplikasi nyata: manipulasi tampilan dan tindakan browser dengan hak halaman. Lab hanya mengubah marker. MITIGASI: output encoding sesuai konteks dan safe framework rendering; validasi frontend bukan pengganti. CSP merupakan defense in depth; aplikasi sebelumnya tidak menetapkan CSP global, dan perubahan ini tidak menonaktifkan atau melonggarkannya. Jangan menyalin `@html` untuk input umum. RETEST menggunakan input identik pada Secure.
+
+### CSRF: sesi cookie dan preferensi pengingat
+
+SOURCE halaman `http://127.0.0.1:4180` → FLOW form POST ke preview `/api/demo/reminder` → proxy Express → cookie/session lookup → SINK `session.reminder` → CONTROL token session-bound dan Origin pada Secure. State hanya preferensi fiktif, tidak mengirim notifikasi.
+
+- POST `/api/demo/session` membuat/sinkronisasi mode dengan Origin lokal tepercaya dan header `X-CareProbe-Settings: 1`; form eksternal tidak dapat menetapkan mode. Settings menyimpan localStorage setelah server menerima mode. API offline menampilkan error dan tidak mengonfirmasi perubahan mode.
+- Cookie `careprobe_demo`: random 32 byte, HttpOnly, SameSite=Lax, host-only, Path=/api/demo, Max-Age satu jam. Secure flag tidak digunakan karena demonstrasi HTTP loopback; ini bukan konfigurasi produksi. Map memori maksimal100 sesi, kedaluwarsa satu jam; restart mereset semuanya.
+- GET `/api/demo/session` hanya membaca, tidak membuat sesi atau mengubah preferensi. POST `/api/demo/reminder` menerima `enabled` string true/false dan token opsional, menolak field mode/field ekstra. Secure memerlukan token sesi yang benar DAN Origin tepercaya. Vulnerable mengabaikan token hanya untuk origin aplikasi atau tepat origin4180; origin lain tetap ditolak. Pengecualian global Origin hanya POST endpoint itu dari4180, lalu keputusan mode tetap di server. Tidak ada permissive credentialed CORS.
+- Port4173 dan4180 berbeda origin tetapi same-site (scheme/host sama). Lax dapat mengirim cookie pada form POST same-site ini; tidak berarti Lax mengizinkan arbitrary cross-site POST. Cookie diperlukan agar request palsu menarget preferensi sesi korban yang sudah ada. Curl dengan cookie buatan saja tidak membuktikan perilaku browser.
+
+Demonstrasi manual (gunakan 127.0.0.1 pada kedua tab, bukan mencampur localhost):
+
+1. Dengan Docker dan preview4173 aktif, jalankan `node scripts/serve-csrf.mjs` pada terminal lain (fixture hanya bind127.0.0.1:4180).
+2. Buka Pengaturan, pastikan sesi aktif, pilih Vulnerable/konfirmasi, dan set pengingat Nonaktif menggunakan kontrol sah.
+3. Buka tab `http://127.0.0.1:4180`. Buka DevTools Network Preserve log; klik tombol form satu kali. Tidak ada aksi otomatis.
+4. Periksa POST ke `http://127.0.0.1:4173/api/demo/reminder`, Origin4180, cookie terkirim otomatis (sembunyikan nilainya), dan respons200 reminder:true.
+5. Kembali ke tab Settings, klik **Muat ulang preferensi**; pengingat sekarang Aktif.
+6. Pilih Secure, set pengingat Nonaktif secara sah. Kembali ke halaman4180 dan klik tombol yang sama:403 CSRF_REJECTED. Muat ulang preferensi: tetap Nonaktif.
+7. Klik **Aktifkan pengingat** pada Settings Secure: berhasil dengan token sesi. Jangan menyalin token ke fixture.
+8. Kembalikan Secure; Ctrl+C preview/fixture, `pnpm lab:down` untuk berhenti.
+
+DAMPAK potensial CSRF: perubahan state tanpa persetujuan pengguna dalam sesi yang sudah ada. Tidak ada klaim takeover, pencurian token atau kompromi pasien. MITIGASI/RETEST: token terikat sesi + Origin + cookie policy + POST; ulangi request palsu dan periksa403/state tidak berubah, lalu buktikan kontrol sah tetap berhasil. XSS marker tidak membaca token atau memanggil endpoint ini.
+
+### Screenshot mahasiswa (sembunyikan cookie, ID sesi, token)
+
+- Layanan normal `gigi` dan satu hasil; tanggal/waktu, mode dan URL.
+- Settings Vulnerable terkonfirmasi; URL XSS encoded; efek span XSS_MARKER dan Elements yang menunjukkan handler/marker.
+- Settings Secure; input identik tampil escaped, tidak ada tombol HTML aktif/marker span.
+- Source keyword → exact fragment gate → @html vs interpolasi Svelte.
+- Settings: sesi aktif, pengingat Nonaktif; halaman simulasi4180 sebelum klik.
+- DevTools POST form: Origin4180, method/status, presence cookie dengan nilai ditutup; jangan publikasikan header cookie mentah.
+- Settings sesudah forged Vulnerable: Aktif. Retest Secure: respons403 dan state tetap Nonaktif.
+- Request sah Secure:200, token presence (nilai ditutup) dan state berubah.
+- Source random cookie/session map, proteksi sinkronisasi mode, token/Origin check dan assignment reminder.
+
+Hasil aktual pengembang dan batas verifikasi dicatat di docs/test-cases.md. DOCX universitas tidak diubah.

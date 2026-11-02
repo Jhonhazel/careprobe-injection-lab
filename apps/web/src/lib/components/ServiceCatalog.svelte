@@ -1,15 +1,18 @@
 <script lang="ts">
+  import { XSS_FRAGMENT } from '../xss-demo';
   import { onMount } from 'svelte';
   import { apiRequest, type CatalogResult } from '../api';
   import ServiceCards from './ServiceCards.svelte';
   import { loadSecurityMode, securityMode } from '../security-mode';
   let { compact = false }: { compact?: boolean } = $props();
   let keyword = $state('');
+  let submittedKeyword = $state('');
   let loading = $state(true);
   let error = $state('');
   let result = $state<CatalogResult | null>(null);
   async function search(event?: SubmitEvent) {
     event?.preventDefault();
+    submittedKeyword = keyword;
     loading = true;
     error = '';
     result = null;
@@ -45,6 +48,13 @@
       >Cari layanan <span aria-hidden="true">↗</span></button
     >
   </form>
+  <div class="notice" aria-live="polite">
+    Hasil pencarian untuk:
+    {#if $securityMode === 'vulnerable' && submittedKeyword === XSS_FRAGMENT}
+      <!-- DELIBERATELY_VULNERABLE_FOR_LOCAL_LAB: only this exact active fragment reaches innerHTML. -->
+      <span data-xss-boundary>{@html submittedKeyword}<span data-xss-marker></span></span>
+    {:else}<span data-search-keyword>{submittedKeyword || 'semua layanan'}</span>{/if}
+  </div>
 {/if}
 <div aria-live="polite" aria-busy={loading}>
   {#if loading}<p role="status" class="notice">Memuat layanan…</p>

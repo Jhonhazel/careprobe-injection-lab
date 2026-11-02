@@ -5,6 +5,8 @@ import { LabError } from "./errors.js";
 import { runCommand } from "./command.js";
 import { sandboxReady } from "./sandbox.js";
 
+import { demoSessionRouter, forgedOrigin } from './demo-session.js';
+
 const keywordSchema = z.string().max(120).default("");
 // Product endpoints fail safely to secure for missing or invalid preferences.
 const productModeSchema = z.enum(["secure", "vulnerable"]).catch("secure");
@@ -27,7 +29,8 @@ export async function createApp() {
       "http://127.0.0.1:3100",
       "http://localhost:3100",
     ]);
-    if (origin && !localOrigins.has(origin)) {
+    const demoForm = req.method === 'POST' && req.path === '/api/demo/reminder' && origin === forgedOrigin;
+    if (origin && !localOrigins.has(origin) && !demoForm) {
       return next(
         new LabError(
           403,
@@ -46,6 +49,7 @@ export async function createApp() {
     });
     next();
   });
+  app.use('/api/demo', demoSessionRouter());
   app.get("/api/health", (_req, res) => {
     db.exec("SELECT 1");
     res.json({
