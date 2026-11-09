@@ -49,7 +49,7 @@ export async function createApp() {
     });
     next();
   });
-  app.use('/api/demo', demoSessionRouter());
+  app.use('/api/demo', demoSessionRouter(searchServices(db, '', 'secure').services));
   app.get("/api/health", (_req, res) => {
     db.exec("SELECT 1");
     res.json({

@@ -1,0 +1,441 @@
+{
+  "observedAt": "2026-11-09T08:39:03.094Z",
+  "transport": "Actual HTTP to local Docker API; separate cookie jars; credential/token/cookie values omitted. Expiry tested separately with deterministic server clock in Vitest.",
+  "health": {
+    "status": "ok",
+    "database": "ready",
+    "commandSandbox": true
+  },
+  "evidence": [
+    {
+      "scenario": "role revocation",
+      "mode": "secure",
+      "status": 200,
+      "response": {
+        "user": {
+          "id": "raka",
+          "name": "Dokter Raka Demo",
+          "role": "PATIENT"
+        }
+      }
+    },
+    {
+      "scenario": "old session still authenticated with current PATIENT role",
+      "mode": "secure",
+      "status": 200,
+      "response": {
+        "user": {
+          "id": "raka",
+          "name": "Dokter Raka Demo",
+          "role": "PATIENT"
+        },
+        "mode": "secure"
+      }
+    },
+    {
+      "scenario": "old DOCTOR snapshot review1002",
+      "mode": "secure",
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "ROLE_DENIED",
+          "message": "Akses atau tahap konsultasi tidak diizinkan."
+        }
+      }
+    },
+    {
+      "scenario": "state after stale action",
+      "mode": "secure",
+      "status": 200,
+      "response": {
+        "consultation": {
+          "id": 1002,
+          "ownerPatientId": "bima",
+          "assignedDoctorId": "raka",
+          "status": "PENDING",
+          "reason": "AUTH-B: konsultasi fiktif Bima."
+        }
+      }
+    },
+    {
+      "scenario": "request temporary privilege",
+      "mode": "secure",
+      "status": 201,
+      "response": {
+        "target": {
+          "id": "raka",
+          "name": "Dokter Raka Demo",
+          "role": "PATIENT",
+          "baseRole": "PATIENT"
+        },
+        "durationMinutes": 5,
+        "grant": {
+          "status": "REQUESTED",
+          "requestedBy": "raka",
+          "requestedAt": "2026-11-09T08:39:02.725Z",
+          "active": false,
+          "expiresAt": null
+        }
+      }
+    },
+    {
+      "scenario": "pending is not doctor",
+      "mode": "secure",
+      "status": 200,
+      "response": {
+        "user": {
+          "id": "raka",
+          "name": "Dokter Raka Demo",
+          "role": "PATIENT"
+        },
+        "mode": "secure"
+      }
+    },
+    {
+      "scenario": "requestor cannot approve",
+      "mode": "secure",
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "ROLE_DENIED",
+          "message": "Akses atau tahap konsultasi tidak diizinkan."
+        }
+      }
+    },
+    {
+      "scenario": "admin approval and active grant",
+      "mode": "secure",
+      "status": 200,
+      "response": {
+        "target": {
+          "id": "raka",
+          "name": "Dokter Raka Demo",
+          "role": "DOCTOR",
+          "baseRole": "PATIENT"
+        },
+        "durationMinutes": 5,
+        "grant": {
+          "status": "ACTIVE",
+          "requestedBy": "raka",
+          "requestedAt": "2026-11-09T08:39:02.725Z",
+          "approvedBy": "admin",
+          "approvedAt": "2026-11-09T08:39:02.729Z",
+          "expiresAt": "2026-11-09T08:44:02.729Z",
+          "active": true
+        }
+      }
+    },
+    {
+      "scenario": "legitimate assigned review",
+      "mode": "secure",
+      "status": 200,
+      "response": {
+        "consultation": {
+          "id": 1001,
+          "ownerPatientId": "alya",
+          "assignedDoctorId": "raka",
+          "status": "IN_REVIEW",
+          "reason": "AUTH-A: konsultasi fiktif Alya."
+        }
+      }
+    },
+    {
+      "scenario": "access review",
+      "mode": "secure",
+      "status": 200,
+      "response": {
+        "target": {
+          "id": "raka",
+          "name": "Dokter Raka Demo",
+          "role": "DOCTOR",
+          "baseRole": "PATIENT"
+        },
+        "durationMinutes": 5,
+        "grant": {
+          "status": "ACTIVE",
+          "requestedBy": "raka",
+          "requestedAt": "2026-11-09T08:39:02.725Z",
+          "approvedBy": "admin",
+          "approvedAt": "2026-11-09T08:39:02.729Z",
+          "expiresAt": "2026-11-09T08:44:02.729Z",
+          "active": true
+        }
+      }
+    },
+    {
+      "scenario": "revoke grant",
+      "mode": "secure",
+      "status": 200,
+      "response": {
+        "target": {
+          "id": "raka",
+          "name": "Dokter Raka Demo",
+          "role": "PATIENT",
+          "baseRole": "PATIENT"
+        },
+        "durationMinutes": 5,
+        "grant": {
+          "status": "REVOKED",
+          "requestedBy": "raka",
+          "requestedAt": "2026-11-09T08:39:02.725Z",
+          "approvedBy": "admin",
+          "approvedAt": "2026-11-09T08:39:02.729Z",
+          "expiresAt": "2026-11-09T08:44:02.729Z",
+          "active": false
+        }
+      }
+    },
+    {
+      "scenario": "old session after grant revocation",
+      "mode": "secure",
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "ROLE_DENIED",
+          "message": "Akses atau tahap konsultasi tidak diizinkan."
+        }
+      }
+    },
+    {
+      "scenario": "grant review after revocation",
+      "mode": "secure",
+      "status": 200,
+      "response": {
+        "target": {
+          "id": "raka",
+          "name": "Dokter Raka Demo",
+          "role": "PATIENT",
+          "baseRole": "PATIENT"
+        },
+        "durationMinutes": 5,
+        "grant": {
+          "status": "REVOKED",
+          "requestedBy": "raka",
+          "requestedAt": "2026-11-09T08:39:02.725Z",
+          "approvedBy": "admin",
+          "approvedAt": "2026-11-09T08:39:02.729Z",
+          "expiresAt": "2026-11-09T08:44:02.729Z",
+          "active": false
+        }
+      }
+    },
+    {
+      "scenario": "role revocation",
+      "mode": "vulnerable",
+      "status": 200,
+      "response": {
+        "user": {
+          "id": "raka",
+          "name": "Dokter Raka Demo",
+          "role": "PATIENT"
+        }
+      }
+    },
+    {
+      "scenario": "old session still authenticated with current PATIENT role",
+      "mode": "vulnerable",
+      "status": 200,
+      "response": {
+        "user": {
+          "id": "raka",
+          "name": "Dokter Raka Demo",
+          "role": "PATIENT"
+        },
+        "mode": "vulnerable"
+      }
+    },
+    {
+      "scenario": "old DOCTOR snapshot review1002",
+      "mode": "vulnerable",
+      "status": 200,
+      "response": {
+        "consultation": {
+          "id": 1002,
+          "ownerPatientId": "bima",
+          "assignedDoctorId": "raka",
+          "status": "IN_REVIEW",
+          "reason": "AUTH-B: konsultasi fiktif Bima."
+        }
+      }
+    },
+    {
+      "scenario": "state after stale action",
+      "mode": "vulnerable",
+      "status": 200,
+      "response": {
+        "consultation": {
+          "id": 1002,
+          "ownerPatientId": "bima",
+          "assignedDoctorId": "raka",
+          "status": "IN_REVIEW",
+          "reason": "AUTH-B: konsultasi fiktif Bima."
+        }
+      }
+    },
+    {
+      "scenario": "request temporary privilege",
+      "mode": "vulnerable",
+      "status": 201,
+      "response": {
+        "target": {
+          "id": "raka",
+          "name": "Dokter Raka Demo",
+          "role": "PATIENT",
+          "baseRole": "PATIENT"
+        },
+        "durationMinutes": 5,
+        "grant": {
+          "status": "REQUESTED",
+          "requestedBy": "raka",
+          "requestedAt": "2026-11-09T08:39:03.019Z",
+          "active": false,
+          "expiresAt": null
+        }
+      }
+    },
+    {
+      "scenario": "pending is not doctor",
+      "mode": "vulnerable",
+      "status": 200,
+      "response": {
+        "user": {
+          "id": "raka",
+          "name": "Dokter Raka Demo",
+          "role": "PATIENT"
+        },
+        "mode": "vulnerable"
+      }
+    },
+    {
+      "scenario": "requestor cannot approve",
+      "mode": "vulnerable",
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "ROLE_DENIED",
+          "message": "Akses atau tahap konsultasi tidak diizinkan."
+        }
+      }
+    },
+    {
+      "scenario": "admin approval and active grant",
+      "mode": "vulnerable",
+      "status": 200,
+      "response": {
+        "target": {
+          "id": "raka",
+          "name": "Dokter Raka Demo",
+          "role": "DOCTOR",
+          "baseRole": "PATIENT"
+        },
+        "durationMinutes": 5,
+        "grant": {
+          "status": "ACTIVE",
+          "requestedBy": "raka",
+          "requestedAt": "2026-11-09T08:39:03.019Z",
+          "approvedBy": "admin",
+          "approvedAt": "2026-11-09T08:39:03.023Z",
+          "expiresAt": "2026-11-09T08:44:03.023Z",
+          "active": true
+        }
+      }
+    },
+    {
+      "scenario": "legitimate assigned review",
+      "mode": "vulnerable",
+      "status": 200,
+      "response": {
+        "consultation": {
+          "id": 1001,
+          "ownerPatientId": "alya",
+          "assignedDoctorId": "raka",
+          "status": "IN_REVIEW",
+          "reason": "AUTH-A: konsultasi fiktif Alya."
+        }
+      }
+    },
+    {
+      "scenario": "access review",
+      "mode": "vulnerable",
+      "status": 200,
+      "response": {
+        "target": {
+          "id": "raka",
+          "name": "Dokter Raka Demo",
+          "role": "DOCTOR",
+          "baseRole": "PATIENT"
+        },
+        "durationMinutes": 5,
+        "grant": {
+          "status": "ACTIVE",
+          "requestedBy": "raka",
+          "requestedAt": "2026-11-09T08:39:03.019Z",
+          "approvedBy": "admin",
+          "approvedAt": "2026-11-09T08:39:03.023Z",
+          "expiresAt": "2026-11-09T08:44:03.023Z",
+          "active": true
+        }
+      }
+    },
+    {
+      "scenario": "revoke grant",
+      "mode": "vulnerable",
+      "status": 200,
+      "response": {
+        "target": {
+          "id": "raka",
+          "name": "Dokter Raka Demo",
+          "role": "PATIENT",
+          "baseRole": "PATIENT"
+        },
+        "durationMinutes": 5,
+        "grant": {
+          "status": "REVOKED",
+          "requestedBy": "raka",
+          "requestedAt": "2026-11-09T08:39:03.019Z",
+          "approvedBy": "admin",
+          "approvedAt": "2026-11-09T08:39:03.023Z",
+          "expiresAt": "2026-11-09T08:44:03.023Z",
+          "active": false
+        }
+      }
+    },
+    {
+      "scenario": "old session after grant revocation",
+      "mode": "vulnerable",
+      "status": 200,
+      "response": {
+        "consultation": {
+          "id": 1002,
+          "ownerPatientId": "bima",
+          "assignedDoctorId": "raka",
+          "status": "IN_REVIEW",
+          "reason": "AUTH-B: konsultasi fiktif Bima."
+        }
+      }
+    },
+    {
+      "scenario": "grant review after revocation",
+      "mode": "vulnerable",
+      "status": 200,
+      "response": {
+        "target": {
+          "id": "raka",
+          "name": "Dokter Raka Demo",
+          "role": "PATIENT",
+          "baseRole": "PATIENT"
+        },
+        "durationMinutes": 5,
+        "grant": {
+          "status": "REVOKED",
+          "requestedBy": "raka",
+          "requestedAt": "2026-11-09T08:39:03.019Z",
+          "approvedBy": "admin",
+          "approvedAt": "2026-11-09T08:39:03.023Z",
+          "expiresAt": "2026-11-09T08:44:03.023Z",
+          "active": false
+        }
+      }
+    }
+  ]
+}

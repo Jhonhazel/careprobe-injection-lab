@@ -1,5 +1,86 @@
 # Manifest CareProbe Health
 
+## Pengalaman website terautentikasi (lanjutan working tree)
+
+| Berkas tepat | Alasan perubahan tahap ini |
+| --- | --- |
+| apps/api/src/app.ts, apps/api/src/demo-session.ts | Meneruskan katalog SQLite existing ke router auth; reminder tidak terbawa saat akun berubah. Cookie scope/sistem sesi sama. |
+| apps/api/src/authorization.ts | Metadata service/time untuk personal record, scope list personal/lab, policy Secure personal dan summary berizin, tanpa Map/database baru. |
+| apps/api/src/authorization.integration.spec.ts | Lima kasus personal scope/service/owner/summary/workflow/legacy isolation/preference,22 kasus lama dipertahankan. |
+| apps/web/src/lib/components/AuthGate.svelte (baru), apps/web/src/lib/components/AuthGate.spec.ts (baru) | Gate terpusat tanpa SSR cookie redesign; pending/anonymous/expired/error/retry tests. |
+| apps/web/src/lib/components/CarePanel.svelte (baru), apps/web/src/lib/components/CarePanel.spec.ts (baru) | Satu UI shared dashboard/form/history normal dengan auth API; role/actions/actual records/error tests. |
+| apps/web/src/lib/auth.ts, apps/web/src/lib/auth.spec.ts | Revision guard untuk response restore lama setelah logout/login. Store/auth/backend tetap sama. |
+| apps/web/src/routes/+layout.svelte | Public header satu nav, lima nav sesudah login, pasang gate terpusat. |
+| apps/web/src/routes/+page.svelte | Landing publik existing dengan CTA login, dashboard role dari response authorized. |
+| apps/web/src/routes/login/+page.svelte | Copy/tautan publik sesuai gate baru; credential flow tidak diganti. |
+| apps/web/src/routes/consultations/+page.svelte, apps/web/src/routes/history/+page.svelte | Pakai CarePanel pribadi, hapus global legacy dari normal History. |
+| apps/web/src/lib/components/ServiceCards.svelte | Patient service selection memakai ID, resolve detail di backend. |
+| apps/web/src/routes/settings/+page.svelte | Account/reminder/lab groups; reuse AuthorizationPanel dan legacy export on-demand. |
+| apps/web/src/app.css | Dashboard, form, status badge dan mobile memakai design system existing. |
+| scripts/smoke-web.mjs | Sesuaikan SSR assertions: nav publik satu, private loading shell tanpa data. Existing proxy tests dipertahankan. |
+| README.md, docs/assignment-mapping.md, docs/lab-report.md, docs/test-cases.md, docs/file-manifest.md | Batas private/legacy/lab, alur role, test/evidence actual dan screenshot guide. |
+| docs/evidence/ux-http.json, docs/evidence/ux-summary.txt |16 observasi HTTP Docker dan TXT asli; bukan klaim file download browser. |
+| docs/evidence/ux-*.png |12 screenshot browser actual: public/redirect/patient/doctor/admin/settings/mobile dan XSS/CSRF. Daftar nama tepat pada inventory di bawah. |
+
+Empat source/test files baru,14 evidence files baru, tanpa dependency, endpoint baru, file dihapus atau perubahan Docker/SQLite schema. Working tree sebelumnya tetap dipertahankan.
+
+## Materi 10 — Bab 2: Privilege Management (lanjutan working tree)
+
+Baseline tahap ini sudah memiliki Authorization dan login/logout yang belum di-commit. Tabel ini hanya delta privilege; perubahan lama di bawah tetap dipertahankan.
+
+| Berkas tepat | Alasan perubahan tahap ini |
+| --- | --- |
+| apps/api/src/authorization.ts | Satu grant Raka5menit, request/approve/reject/review/revoke, expiry authoritative, audit, satu scoped stale-review1002; reuse policy/auth/CSRF. |
+| apps/api/src/demo-session.ts | Satu field snapshot doctorAtLogin; rotation existing tidak menyalinnya ke sesi baru. |
+| apps/api/src/authorization.integration.spec.ts | Tambah lifecycle, revoke/expiry, stale scope/session rotation, strict grant input dan creator nyata;13 kasus lama dipertahankan. |
+| apps/web/src/lib/components/AuthorizationPanel.svelte | Section grant compact di panel lama; request/decision/review/revoke dan expiry UTC, tanpa nav/selector baru. |
+| apps/web/src/lib/components/AuthorizationPanel.spec.ts | Empat cases grant UI/action/token, update stub response existing. |
+| README.md, docs/assignment-mapping.md, docs/test-cases.md, docs/lab-report.md, docs/file-manifest.md | Mapping2.1–2.8, kontrak, manual/screenshot, evidence aktual dan batas. |
+| docs/evidence/privilege-http.json |26 observasi HTTP Docker aktual dua sesi tanpa credential/token/cookie. |
+| docs/evidence/privilege-requested.png, docs/evidence/privilege-active.png, docs/evidence/privilege-revoked.png, docs/evidence/privilege-rejected.png | Screenshot browser lifecycle nyata, tanpa screenshot expiry yang belum dijalankan. |
+| docs/evidence/privilege-creep-vulnerable.png, docs/evidence/privilege-creep-secure.png, docs/evidence/privilege-creep-audit.png | Creep V/S dan audit nyata dua browser. Screenshot Secure sebelum reload masih menunjukkan UI role lama; HTTP/fresh reload membuktikan live PATIENT. |
+
+Tidak ada source module/endpoint shell baru, dependency, Docker change, migration atau file dihapus. Delapan berkas evidence baru; source/test memakai lima berkas existing dari working tree sebelumnya.
+
+## Integrasi login/logout website (lanjutan working tree Materi10)
+
+Perubahan Materi10 yang belum di-commit dipertahankan. Tahap ini memakai backend dan session yang sama; tidak mengubah logic apps/api. Daftar berikut hanya perubahan tambahan untuk UX login.
+
+| Berkas | Alasan |
+| --- | --- |
+| apps/web/src/lib/auth.ts | Satu store identity server, restore/login/logout, token sesi terbaru untuk mutation, return-path whitelist. |
+| apps/web/src/routes/login/+page.svelte | Form username/password, feedback/loading, redirect aman, tanpa credential/role selector otomatis. |
+| apps/web/src/lib/components/AuthControls.svelte | Identity/role dan Masuk/Keluar terpisah dari lima nav produk. |
+| apps/web/src/routes/+layout.svelte | Pasang header account controls dan refresh identity pada navigasi. |
+| apps/web/src/lib/api.ts | Optional POST headers untuk reuse token/Settings header dengan error handling existing. |
+| apps/web/src/lib/components/AuthorizationPanel.svelte | Hapus embedded login, pakai shared auth dan existing role actions/summary. |
+| apps/web/src/routes/settings/+page.svelte | Hapus account form, fresh token pada reminder, clear expired identity, refresh identity setelah mode sync. |
+| apps/web/src/app.css | Styling login/header responsif mengikuti desain lama. |
+| apps/web/src/lib/auth.spec.ts, apps/web/src/lib/login.spec.ts, apps/web/src/lib/components/AuthControls.spec.ts, apps/web/src/lib/settings.spec.ts | Tes identity/session/error/header/login form/redirect/logout/expiry/token. |
+| apps/web/vitest.config.ts | Resolve modul navigasi SvelteKit existing untuk mock komponen. |
+| scripts/smoke-web.mjs | Tambahkan login SSR/form smoke; nav produk tetap lima. |
+| README.md, docs/assignment-mapping.md, docs/lab-report.md, docs/test-cases.md, docs/file-manifest.md | Alur baru, hasil verifikasi dan manifest; tidak menulis ulang analisis akademis. |
+| docs/evidence/login-page.png, docs/evidence/login-restored-header.png, docs/evidence/login-mobile.png | Screenshot browser nyata tanpa password/token/cookie. |
+
+
+## Materi 10 — Authorization: Access Control dan Privilege Management
+
+Baseline HEAD0a71f8e83da6a85a63d8a5f25ef85380b23122c0, branch feat/careprobe-client-side-security bersih saat mulai. Perubahan lokal tanpa commit/push/deploy.
+
+| Berkas | Alasan |
+| --- | --- |
+| apps/api/src/demo-session.ts | Perluas cookie/session lama dengan identity opsional dan rotasi login/logout; daftarkan router auth. |
+| apps/api/src/authorization.ts | Hash login, fixture Map terpisah, policy RBAC/ABAC terpusat, tiga omission terbatas, role live, reset dan audit. |
+| apps/api/src/authorization.integration.spec.ts | Matriks13 skenario API dua mode, sesi/CSRF/ownership/assignment/workflow/lifecycle/isolation. |
+| apps/web/src/lib/components/AuthorizationPanel.svelte | UI akun Settings dan fixture Riwayat, role-aware actions dan error/HTTP/summary. |
+| apps/web/src/lib/components/AuthorizationPanel.spec.ts | Kontrol role, token pada POST, output escaped dan feedback403 aktual. |
+| apps/web/src/routes/settings/+page.svelte | Panel login dalam sesi siap; refresh token parent sesudah rotasi. |
+| apps/web/src/routes/history/+page.svelte | Panel fixture otorisasi terpisah tanpa menu baru. |
+| README.md, docs/assignment-mapping.md, docs/test-cases.md, docs/lab-report.md, docs/file-manifest.md | Panduan Materi10, endpoint, matriks, bukti, screenshot, CIA dan batas. |
+| docs/evidence/m10-http.json |22 observasi HTTP nyata Docker tanpa cookie/password/token. |
+| docs/evidence/m10-patient.png, docs/evidence/m10-idor-secure.png, docs/evidence/m10-idor-vulnerable.png, docs/evidence/m10-doctor-completed.png, docs/evidence/m10-admin-revocation.png | Screenshot konten tab nyata untuk role, IDOR, urutan sah dan lifecycle. |
+
+
 ## Materi 9 — Client Side Security: XSS dan CSRF
 
 Perubahan lokal dibanding HEAD146283001a0b026ea22ce354f358a9ede5f84dee (baseline bersih). Tidak ada commit/push/deploy.
@@ -101,7 +182,7 @@ Refactor lokal pada branch `codex/careprobe-health-refactor`, dibanding baseline
 
 ## Semua berkas proyek
 
-96 berkas sumber, konfigurasi, tes, dokumentasi dan bukti terpilih. Dependensi/build/secret/referensi privat dikecualikan.
+141 berkas sumber, konfigurasi, tes, dokumentasi dan bukti terpilih. Dependensi/build/secret/referensi privat dikecualikan.
 
 - [.dockerignore](../.dockerignore)
 - [.gitignore](../.gitignore)
@@ -200,3 +281,52 @@ Refactor lokal pada branch `codex/careprobe-health-refactor`, dibanding baseline
 - [docs/evidence/m9-xss-vulnerable.png](../docs/evidence/m9-xss-vulnerable.png)
 - [scripts/fixtures/csrf.html](../scripts/fixtures/csrf.html)
 - [scripts/serve-csrf.mjs](../scripts/serve-csrf.mjs)
+
+- [apps/api/src/authorization.integration.spec.ts](../apps/api/src/authorization.integration.spec.ts)
+- [apps/api/src/authorization.ts](../apps/api/src/authorization.ts)
+- [apps/web/src/lib/components/AuthorizationPanel.spec.ts](../apps/web/src/lib/components/AuthorizationPanel.spec.ts)
+- [apps/web/src/lib/components/AuthorizationPanel.svelte](../apps/web/src/lib/components/AuthorizationPanel.svelte)
+- [docs/evidence/m10-admin-revocation.png](../docs/evidence/m10-admin-revocation.png)
+- [docs/evidence/m10-doctor-completed.png](../docs/evidence/m10-doctor-completed.png)
+- [docs/evidence/m10-http.json](../docs/evidence/m10-http.json)
+- [docs/evidence/m10-idor-secure.png](../docs/evidence/m10-idor-secure.png)
+- [docs/evidence/m10-idor-vulnerable.png](../docs/evidence/m10-idor-vulnerable.png)
+- [docs/evidence/m10-patient.png](../docs/evidence/m10-patient.png)
+
+- [apps/web/src/lib/auth.spec.ts](../apps/web/src/lib/auth.spec.ts)
+- [apps/web/src/lib/auth.ts](../apps/web/src/lib/auth.ts)
+- [apps/web/src/lib/components/AuthControls.spec.ts](../apps/web/src/lib/components/AuthControls.spec.ts)
+- [apps/web/src/lib/components/AuthControls.svelte](../apps/web/src/lib/components/AuthControls.svelte)
+- [apps/web/src/lib/login.spec.ts](../apps/web/src/lib/login.spec.ts)
+- [apps/web/src/routes/login/+page.svelte](../apps/web/src/routes/login/+page.svelte)
+- [docs/evidence/login-mobile.png](../docs/evidence/login-mobile.png)
+- [docs/evidence/login-page.png](../docs/evidence/login-page.png)
+- [docs/evidence/login-restored-header.png](../docs/evidence/login-restored-header.png)
+
+- [docs/evidence/privilege-active.png](../docs/evidence/privilege-active.png)
+- [docs/evidence/privilege-creep-audit.png](../docs/evidence/privilege-creep-audit.png)
+- [docs/evidence/privilege-creep-secure.png](../docs/evidence/privilege-creep-secure.png)
+- [docs/evidence/privilege-creep-vulnerable.png](../docs/evidence/privilege-creep-vulnerable.png)
+- [docs/evidence/privilege-http.json](../docs/evidence/privilege-http.json)
+- [docs/evidence/privilege-rejected.png](../docs/evidence/privilege-rejected.png)
+- [docs/evidence/privilege-requested.png](../docs/evidence/privilege-requested.png)
+- [docs/evidence/privilege-revoked.png](../docs/evidence/privilege-revoked.png)
+
+- [docs/evidence/ux-admin-dashboard.png](../docs/evidence/ux-admin-dashboard.png)
+- [docs/evidence/ux-alya-dashboard.png](../docs/evidence/ux-alya-dashboard.png)
+- [docs/evidence/ux-bima-history.png](../docs/evidence/ux-bima-history.png)
+- [docs/evidence/ux-csrf-secure.png](../docs/evidence/ux-csrf-secure.png)
+- [docs/evidence/ux-csrf-vulnerable.png](../docs/evidence/ux-csrf-vulnerable.png)
+- [docs/evidence/ux-doctor-completed.png](../docs/evidence/ux-doctor-completed.png)
+- [docs/evidence/ux-http.json](../docs/evidence/ux-http.json)
+- [docs/evidence/ux-login-redirect.png](../docs/evidence/ux-login-redirect.png)
+- [docs/evidence/ux-mobile.png](../docs/evidence/ux-mobile.png)
+- [docs/evidence/ux-public-home.png](../docs/evidence/ux-public-home.png)
+- [docs/evidence/ux-settings.png](../docs/evidence/ux-settings.png)
+- [docs/evidence/ux-summary.txt](../docs/evidence/ux-summary.txt)
+- [docs/evidence/ux-xss-secure.png](../docs/evidence/ux-xss-secure.png)
+- [docs/evidence/ux-xss-vulnerable.png](../docs/evidence/ux-xss-vulnerable.png)
+- [apps/web/src/lib/components/AuthGate.svelte](../apps/web/src/lib/components/AuthGate.svelte)
+- [apps/web/src/lib/components/AuthGate.spec.ts](../apps/web/src/lib/components/AuthGate.spec.ts)
+- [apps/web/src/lib/components/CarePanel.svelte](../apps/web/src/lib/components/CarePanel.svelte)
+- [apps/web/src/lib/components/CarePanel.spec.ts](../apps/web/src/lib/components/CarePanel.spec.ts)

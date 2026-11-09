@@ -1,0 +1,7 @@
+CareProbe — Data otorisasi fiktif
+ID: 1005
+Pemilik: alya
+Status: COMPLETED
+Layanan: Pemeriksaan Gigi
+Tanggal: 2026-11-09T09:18:44.321Z
+Alasan: HTTP simulasi konsultasi pribadi Alya.

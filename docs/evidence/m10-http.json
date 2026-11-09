@@ -1,0 +1,204 @@
+{
+  "observedAt": "2026-11-09T07:41:12.016Z",
+  "transport": "HTTP to local Docker API; no cookies, credentials or CSRF tokens retained",
+  "health": {
+    "status": "ok",
+    "database": "ready",
+    "commandSandbox": true
+  },
+  "evidence": [
+    {
+      "scenario": "own record",
+      "mode": "secure",
+      "status": 200,
+      "consultation": {
+        "id": 1001,
+        "ownerPatientId": "alya",
+        "assignedDoctorId": "raka",
+        "status": "PENDING",
+        "reason": "AUTH-A: konsultasi fiktif Alya."
+      }
+    },
+    {
+      "scenario": "horizontal IDOR",
+      "mode": "secure",
+      "status": 403
+    },
+    {
+      "scenario": "forced browsing patient review",
+      "mode": "secure",
+      "status": 403
+    },
+    {
+      "scenario": "state after patient review",
+      "mode": "secure",
+      "status": 200,
+      "state": "PENDING",
+      "consultation": {
+        "id": 1001,
+        "ownerPatientId": "alya",
+        "assignedDoctorId": "raka",
+        "status": "PENDING",
+        "reason": "AUTH-A: konsultasi fiktif Alya."
+      }
+    },
+    {
+      "scenario": "workflow skip",
+      "mode": "secure",
+      "status": 409
+    },
+    {
+      "scenario": "state after skip",
+      "mode": "secure",
+      "status": 200,
+      "state": "PENDING",
+      "consultation": {
+        "id": 1001,
+        "ownerPatientId": "alya",
+        "assignedDoctorId": "raka",
+        "status": "PENDING",
+        "reason": "AUTH-A: konsultasi fiktif Alya."
+      }
+    },
+    {
+      "scenario": "correct review",
+      "mode": "secure",
+      "status": 200,
+      "consultation": {
+        "id": 1001,
+        "ownerPatientId": "alya",
+        "assignedDoctorId": "raka",
+        "status": "IN_REVIEW",
+        "reason": "AUTH-A: konsultasi fiktif Alya."
+      }
+    },
+    {
+      "scenario": "correct completion",
+      "mode": "secure",
+      "status": 200,
+      "consultation": {
+        "id": 1001,
+        "ownerPatientId": "alya",
+        "assignedDoctorId": "raka",
+        "status": "COMPLETED",
+        "reason": "AUTH-A: konsultasi fiktif Alya."
+      }
+    },
+    {
+      "scenario": "unassigned doctor",
+      "mode": "secure",
+      "status": 403
+    },
+    {
+      "scenario": "admin cannot read content",
+      "mode": "secure",
+      "status": 403
+    },
+    {
+      "scenario": "role revoked live",
+      "mode": "secure",
+      "status": 200,
+      "state": "PATIENT"
+    },
+    {
+      "scenario": "old doctor permission rejected",
+      "mode": "secure",
+      "status": 403
+    },
+    {
+      "scenario": "own record",
+      "mode": "vulnerable",
+      "status": 200,
+      "consultation": {
+        "id": 1001,
+        "ownerPatientId": "alya",
+        "assignedDoctorId": "raka",
+        "status": "PENDING",
+        "reason": "AUTH-A: konsultasi fiktif Alya."
+      }
+    },
+    {
+      "scenario": "horizontal IDOR",
+      "mode": "vulnerable",
+      "status": 200,
+      "consultation": {
+        "id": 1002,
+        "ownerPatientId": "bima",
+        "assignedDoctorId": "raka",
+        "status": "PENDING",
+        "reason": "AUTH-B: konsultasi fiktif Bima."
+      }
+    },
+    {
+      "scenario": "forced browsing patient review",
+      "mode": "vulnerable",
+      "status": 200,
+      "consultation": {
+        "id": 1001,
+        "ownerPatientId": "alya",
+        "assignedDoctorId": "raka",
+        "status": "IN_REVIEW",
+        "reason": "AUTH-A: konsultasi fiktif Alya."
+      }
+    },
+    {
+      "scenario": "state after patient review",
+      "mode": "vulnerable",
+      "status": 200,
+      "state": "IN_REVIEW",
+      "consultation": {
+        "id": 1001,
+        "ownerPatientId": "alya",
+        "assignedDoctorId": "raka",
+        "status": "IN_REVIEW",
+        "reason": "AUTH-A: konsultasi fiktif Alya."
+      }
+    },
+    {
+      "scenario": "workflow skip",
+      "mode": "vulnerable",
+      "status": 200,
+      "consultation": {
+        "id": 1001,
+        "ownerPatientId": "alya",
+        "assignedDoctorId": "raka",
+        "status": "COMPLETED",
+        "reason": "AUTH-A: konsultasi fiktif Alya."
+      }
+    },
+    {
+      "scenario": "state after skip",
+      "mode": "vulnerable",
+      "status": 200,
+      "state": "COMPLETED",
+      "consultation": {
+        "id": 1001,
+        "ownerPatientId": "alya",
+        "assignedDoctorId": "raka",
+        "status": "COMPLETED",
+        "reason": "AUTH-A: konsultasi fiktif Alya."
+      }
+    },
+    {
+      "scenario": "unassigned doctor",
+      "mode": "vulnerable",
+      "status": 403
+    },
+    {
+      "scenario": "admin cannot read content",
+      "mode": "vulnerable",
+      "status": 403
+    },
+    {
+      "scenario": "role revoked live",
+      "mode": "vulnerable",
+      "status": 200,
+      "state": "PATIENT"
+    },
+    {
+      "scenario": "old doctor permission rejected",
+      "mode": "vulnerable",
+      "status": 403
+    }
+  ]
+}

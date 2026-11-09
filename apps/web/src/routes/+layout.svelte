@@ -1,5 +1,8 @@
 <script lang="ts">
   import '../app.css';
+  import AuthControls from '../lib/components/AuthControls.svelte';
+  import AuthGate from '../lib/components/AuthGate.svelte';
+  import { authState } from '../lib/auth';
   import { page } from '$app/state';
   let { children } = $props();
   const links = [
@@ -29,15 +32,16 @@
       ></a
     >
     <nav aria-label="Navigasi utama">
-      {#each links as link}<a
+      {#each ($authState.user && !$authState.error ? links : links.slice(0, 1)) as link}<a
           href={link.href}
           aria-current={page.url.pathname === link.href ? 'page' : undefined}
           >{link.label}</a
         >{/each}
     </nav>
+    <AuthControls />
   </div>
 </header>
-<main id="main">{@render children()}</main>
+<main id="main"><AuthGate path={page.url.pathname}>{@render children()}</AuthGate></main>
 <footer class="site-footer">
   <div class="container footer-inner">
     <a class="brand footer-brand" href="/"

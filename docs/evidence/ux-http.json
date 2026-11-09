@@ -1,0 +1,268 @@
+{
+  "observedAt": "2026-11-09T09:18:44.370Z",
+  "transport": "Real HTTP through preview proxy to Docker; no browser download claim; cookie/token/password omitted",
+  "evidence": [
+    {
+      "scenario": "normal create binds owner and real service in Vulnerable session",
+      "status": 201,
+      "response": {
+        "consultation": {
+          "id": 1005,
+          "ownerPatientId": "alya",
+          "assignedDoctorId": "raka",
+          "status": "PENDING",
+          "reason": "HTTP simulasi konsultasi pribadi Alya.",
+          "serviceId": 2,
+          "serviceName": "Pemeriksaan Gigi",
+          "createdAt": "2026-11-09T09:18:44.321Z"
+        }
+      },
+      "type": "application/json; charset=utf-8",
+      "disposition": null
+    },
+    {
+      "scenario": "own normal list",
+      "status": 200,
+      "response": {
+        "consultations": [
+          {
+            "id": 1004,
+            "ownerPatientId": "alya",
+            "assignedDoctorId": "raka",
+            "status": "COMPLETED",
+            "reason": "Simulasi konsultasi gigi pribadi Alya untuk demonstrasi akun.",
+            "serviceId": 2,
+            "serviceName": "Pemeriksaan Gigi",
+            "createdAt": "2026-11-09T09:10:10.977Z"
+          },
+          {
+            "id": 1005,
+            "ownerPatientId": "alya",
+            "assignedDoctorId": "raka",
+            "status": "PENDING",
+            "reason": "HTTP simulasi konsultasi pribadi Alya.",
+            "serviceId": 2,
+            "serviceName": "Pemeriksaan Gigi",
+            "createdAt": "2026-11-09T09:18:44.321Z"
+          }
+        ],
+        "mode": "vulnerable"
+      },
+      "type": "application/json; charset=utf-8",
+      "disposition": null
+    },
+    {
+      "scenario": "Bima normal list excludes Alya",
+      "status": 200,
+      "response": {
+        "consultations": [],
+        "mode": "vulnerable"
+      },
+      "type": "application/json; charset=utf-8",
+      "disposition": null
+    },
+    {
+      "scenario": "normal IDOR still denied in Vulnerable",
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "OWNER_DENIED",
+          "message": "Akses atau tahap konsultasi tidak diizinkan."
+        }
+      },
+      "type": "application/json; charset=utf-8",
+      "disposition": null
+    },
+    {
+      "scenario": "normal summary denied to Bima",
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "OWNER_DENIED",
+          "message": "Akses atau tahap konsultasi tidak diizinkan."
+        }
+      },
+      "type": "application/json; charset=utf-8",
+      "disposition": null
+    },
+    {
+      "scenario": "normal patient review denied in Vulnerable",
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "ROLE_DENIED",
+          "message": "Akses atau tahap konsultasi tidak diizinkan."
+        }
+      },
+      "type": "application/json; charset=utf-8",
+      "disposition": null
+    },
+    {
+      "scenario": "denial leaves PENDING",
+      "status": 200,
+      "response": {
+        "consultation": {
+          "id": 1005,
+          "ownerPatientId": "alya",
+          "assignedDoctorId": "raka",
+          "status": "PENDING",
+          "reason": "HTTP simulasi konsultasi pribadi Alya.",
+          "serviceId": 2,
+          "serviceName": "Pemeriksaan Gigi",
+          "createdAt": "2026-11-09T09:18:44.321Z"
+        }
+      },
+      "type": "application/json; charset=utf-8",
+      "disposition": null
+    },
+    {
+      "scenario": "Admin cannot read medical content",
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "ROLE_DENIED",
+          "message": "Akses atau tahap konsultasi tidak diizinkan."
+        }
+      },
+      "type": "application/json; charset=utf-8",
+      "disposition": null
+    },
+    {
+      "scenario": "doctor cannot skip normal workflow in Vulnerable",
+      "status": 409,
+      "response": {
+        "error": {
+          "code": "WORKFLOW_DENIED",
+          "message": "Akses atau tahap konsultasi tidak diizinkan."
+        }
+      },
+      "type": "application/json; charset=utf-8",
+      "disposition": null
+    },
+    {
+      "scenario": "assigned doctor reviews",
+      "status": 200,
+      "response": {
+        "consultation": {
+          "id": 1005,
+          "ownerPatientId": "alya",
+          "assignedDoctorId": "raka",
+          "status": "IN_REVIEW",
+          "reason": "HTTP simulasi konsultasi pribadi Alya.",
+          "serviceId": 2,
+          "serviceName": "Pemeriksaan Gigi",
+          "createdAt": "2026-11-09T09:18:44.321Z"
+        }
+      },
+      "type": "application/json; charset=utf-8",
+      "disposition": null
+    },
+    {
+      "scenario": "assigned doctor completes",
+      "status": 200,
+      "response": {
+        "consultation": {
+          "id": 1005,
+          "ownerPatientId": "alya",
+          "assignedDoctorId": "raka",
+          "status": "COMPLETED",
+          "reason": "HTTP simulasi konsultasi pribadi Alya.",
+          "serviceId": 2,
+          "serviceName": "Pemeriksaan Gigi",
+          "createdAt": "2026-11-09T09:18:44.321Z"
+        }
+      },
+      "type": "application/json; charset=utf-8",
+      "disposition": null
+    },
+    {
+      "scenario": "owner summary real TXT",
+      "status": 200,
+      "response": {
+        "text": "CareProbe — Data otorisasi fiktif\nID: 1005\nPemilik: alya\nStatus: COMPLETED\nLayanan: Pemeriksaan Gigi\nTanggal: 2026-11-09T09:18:44.321Z\nAlasan: HTTP simulasi konsultasi pribadi Alya.\n"
+      },
+      "type": "text/plain; charset=utf-8",
+      "disposition": "attachment; filename=careprobe-auth-1005.txt"
+    },
+    {
+      "scenario": "public legacy does not contain protected records",
+      "status": 200,
+      "response": {
+        "consultations": [
+          {
+            "id": 4,
+            "serviceId": 1,
+            "serviceName": "Konsultasi Umum",
+            "patientName": "Preview Demo",
+            "reason": "Simulasi melalui frontend proxy.",
+            "status": "PENDING",
+            "createdAt": "2026-11-09T09:16:43.548Z"
+          },
+          {
+            "id": 3,
+            "serviceId": 2,
+            "serviceName": "Pemeriksaan Gigi",
+            "patientName": "Rani Docker Demo",
+            "reason": "Simulasi pemeriksaan gigi.",
+            "status": "PENDING",
+            "createdAt": "2026-11-09T09:09:26.965Z"
+          },
+          {
+            "id": 2,
+            "serviceId": 2,
+            "serviceName": "Pemeriksaan Gigi",
+            "patientName": "Bima Demo",
+            "reason": "Simulasi pemeriksaan gigi rutin.",
+            "status": "PENDING",
+            "createdAt": "2026-10-02T09:00:00.000Z"
+          },
+          {
+            "id": 1,
+            "serviceId": 1,
+            "serviceName": "Konsultasi Umum",
+            "patientName": "Alya Demo",
+            "reason": "Simulasi konsultasi kesehatan umum.",
+            "status": "PENDING",
+            "createdAt": "2026-10-01T09:00:00.000Z"
+          }
+        ]
+      },
+      "type": "application/json; charset=utf-8",
+      "disposition": null
+    },
+    {
+      "scenario": "legacy export cannot retrieve protected record",
+      "status": 404,
+      "response": {
+        "error": {
+          "code": "CONSULTATION_NOT_FOUND",
+          "message": "Konsultasi tidak ditemukan."
+        }
+      },
+      "type": "application/json; charset=utf-8",
+      "disposition": null
+    },
+    {
+      "scenario": "doctor revocation blocks normal list",
+      "status": 200,
+      "response": {
+        "consultations": [],
+        "mode": "vulnerable"
+      },
+      "type": "application/json; charset=utf-8",
+      "disposition": null
+    },
+    {
+      "scenario": "doctor revocation blocks normal action",
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "ROLE_DENIED",
+          "message": "Akses atau tahap konsultasi tidak diizinkan."
+        }
+      },
+      "type": "application/json; charset=utf-8",
+      "disposition": null
+    }
+  ]
+}

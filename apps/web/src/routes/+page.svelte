@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { authState } from '../lib/auth';
+  import CarePanel from '../lib/components/CarePanel.svelte';
   import ServiceCatalog from '$lib/components/ServiceCatalog.svelte';
 </script>
 
@@ -9,6 +11,12 @@
   /></svelte:head
 >
 
+{#if $authState.ready && $authState.user && !$authState.error}
+<div class="container page-content">
+  <div class="page-intro"><span class="eyebrow">RUANG KONSULTASI ANDA</span><h1>Halo, {$authState.user.name}.</h1><p>{$authState.user.role === 'ADMIN' ? 'Tinjau akses dan permintaan izin pada lingkungan simulasi.' : $authState.user.role === 'DOCTOR' ? 'Lanjutkan konsultasi yang ditugaskan kepada Anda.' : 'Pilih layanan dan ikuti perkembangan konsultasi Anda.'}</p></div>
+  <CarePanel summary />
+</div>
+{:else}
 <section class="hero">
   <div class="container hero-grid">
     <div class="hero-copy">
@@ -21,9 +29,9 @@
         riwayatnya dalam satu tempat. Seluruh alur di sini menggunakan data simulasi.
       </p>
       <div class="hero-actions">
-        <a class="button" href="/consultations"
-          >Mulai Konsultasi <span aria-hidden="true">↗</span></a
-        ><a class="button secondary" href="/services">Lihat layanan</a>
+        <a class="button" href="/login"
+          >Masuk <span aria-hidden="true">↗</span></a
+        ><a class="button secondary" href="#layanan">Lihat layanan</a>
       </div>
       <div class="hero-notes">
         <span>✓ Pilihan layanan</span><span>✓ Riwayat permintaan</span
@@ -86,17 +94,17 @@
   <p>
     Seluruh layanan, pasien, dan konsultasi di CareProbe Health bersifat fiktif.
   </p>
-  <a href="/history">Lihat riwayat →</a>
+  <a href="/login">Lihat riwayat →</a>
 </div>
 
-<section class="section container">
+<section id="layanan" class="section container">
   <div class="section-heading">
     <div>
       <span class="eyebrow">01 / PILIH LAYANAN</span>
       <h2>Kenali layanan yang tersedia.</h2>
       <p>Cari layanan berdasarkan kebutuhan simulasi Anda.</p>
     </div>
-    <a class="text-link" href="/services">Semua layanan ↗</a>
+    <a class="text-link" href="#layanan">Semua layanan ↗</a>
   </div>
   <ServiceCatalog compact />
 </section>
@@ -112,21 +120,21 @@
       <span class="pill">Data fiktif</span>
     </div>
     <div class="two-columns">
-      <a class="lab-card" href="/consultations"
+      <a class="lab-card" href="/login"
         ><span class="lab-card-number"
           >LANGKAH 01 <span aria-hidden="true">↗</span></span
         >
         <div class="lab-icon" aria-hidden="true">✚</div>
         <h3>Ajukan konsultasi</h3>
         <p>
-          Pilih layanan, isi nama pasien demo dan alasan singkat, lalu kirim
+          Pilih layanan, sampaikan alasan fiktif, lalu kirim
           permintaan konsultasi.
         </p>
         <span class="lab-card-footer"
           >Permintaan tersimpan <strong>Mulai sekarang →</strong></span
         ></a
       >
-      <a class="lab-card" href="/history"
+      <a class="lab-card" href="/login"
         ><span class="lab-card-number"
           >LANGKAH 02 <span aria-hidden="true">↗</span></span
         >
@@ -153,8 +161,10 @@
         kembali melihatnya kapan saja selama sesi backend berjalan.
       </p>
     </div>
-    <a class="button secondary" href="/consultations"
-      >Mulai Konsultasi <span aria-hidden="true">↗</span></a
+    <a class="button secondary" href="/login"
+      >Masuk <span aria-hidden="true">↗</span></a
     >
   </div>
 </section>
+
+{/if}

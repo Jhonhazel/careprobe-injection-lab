@@ -9,13 +9,15 @@ const pages = ['/', '/services', '/consultations', '/history', '/settings'];
 for (const path of pages) {
   const response = await get(path);
   const html = await response.text();
-  verify(`page ${path} and five product navigation links`, () => {
+  verify(`page ${path} has public-only navigation and no private SSR content`, () => {
     assert.equal(response.status, 200);
     assert.ok(html.includes('CareProbe Health'));
     const nav = html.match(/<nav[^>]*aria-label="Navigasi utama"[^>]*>([\s\S]*?)<\/nav>/)?.[1];
     assert.ok(nav);
-    assert.equal((nav.match(/<a\b/g) ?? []).length, 5);
-    for (const href of pages) assert.ok(nav.includes(`href="${href}"`));
+    assert.equal((nav.match(/<a\b/g) ?? []).length, 1);
+    assert.ok(nav.includes('href="/"'));
+    for (const href of pages.slice(1)) assert.ok(!nav.includes('href="' + href + '"'));
+    if (path !== '/') { assert.ok(html.includes('Memeriksa sesi Anda')); assert.ok(!/AUTH-A|AUTH-B|title-2|care-reason|security-mode/.test(html)); }
     assert.ok(!/SQL Lab|Command Lab|Laporan|SQL Injection|Command Injection/.test(nav));
     if (path !== '/settings') assert.ok(!html.includes('name="security-mode"'));
     if (path === '/') assert.ok(!/LAB_MARKER|SQL Injection|Command Injection|SELECT|Vulnerable/.test(html));
@@ -25,11 +27,19 @@ for (const [path, target] of [['/labs/sql-injection', '/services'], ['/labs/comm
   const response = await get(path);
   verify(`legacy ${path} redirects to ${target}`, () => { assert.equal(response.status, 307); assert.equal(response.headers.get('location'), target); });
 }
+const loginPage = await get('/login');
+const loginHtml = await loginPage.text();
+verify('public login page is SSR-safe and has labeled credential fields', () => {
+  assert.equal(loginPage.status, 200);
+  assert.ok(loginHtml.includes('login-username') && loginHtml.includes('login-password'));
+  assert.ok(loginHtml.includes('Masuk ke CareProbe Health'));
+  assert.ok(!loginHtml.includes('CareProbeDemo!2026'));
+});
 for (const keyword of ['gigi', '%27%20OR%201%3D1%20--%20']) {
   const response = await get(`/services?keyword=${keyword}`);
   const html = await response.text();
   verify(`direct services page URL ${keyword} is SSR-safe`, () => {
-    assert.equal(response.status, 200); assert.ok(html.includes('catalog-search'));
+    assert.equal(response.status, 200); assert.ok(html.includes('Memeriksa sesi Anda')); assert.ok(!html.includes('catalog-search'));
   });
 }
 for (const [mode, count] of [['secure', 0], ['vulnerable', 6]]) {

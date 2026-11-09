@@ -1,13 +1,15 @@
 import { randomBytes } from 'node:crypto';
 import express from 'express';
 import { z } from 'zod';
+import { authorizationRouter } from './authorization.js';
+import type { Service } from './database.js';
 import { LabError } from './errors.js';
 export const forgedOrigin = 'http://127.0.0.1:4180';
 export const settingsOrigins = new Set(['http://127.0.0.1:5173', 'http://127.0.0.1:4173', 'http://127.0.0.1:3100', 'http://localhost:5173', 'http://localhost:4173', 'http://localhost:3100']);
 const cookieName = 'careprobe_demo';
 const lifetime = 60 * 60 * 1000;
-interface Session { mode: 'secure' | 'vulnerable'; reminder: boolean; csrfToken: string; expires: number }
-export function demoSessionRouter() {
+export interface Session { doctorAtLogin?: boolean; userId?: string; mode: 'secure' | 'vulnerable'; reminder: boolean; csrfToken: string; expires: number }
+export function demoSessionRouter(services: Service[]) {
   const router = express.Router();
   const sessions = new Map<string, Session>();
   const lookup = (cookie = '') => {
@@ -15,6 +17,18 @@ export function demoSessionRouter() {
     const session = id ? sessions.get(id) : undefined;
     return session && session.expires > Date.now() ? session : undefined;
   };
+  const rotate = (req: express.Request, res: express.Response, userId?: string) => {
+    const previous = lookup(req.get('Cookie'));
+    for (const [id, value] of sessions) if (value === previous || value.expires <= Date.now()) sessions.delete(id);
+    if (sessions.size >= 100) throw new LabError(429, 'SESSION_LIMIT', 'Batas sesi demo tercapai.');
+    const id = randomBytes(32).toString('hex');
+    const session: Session = { mode: previous?.mode ?? 'secure', reminder: userId && userId === previous?.userId ? previous.reminder : false,
+      csrfToken: randomBytes(32).toString('hex'), expires: Date.now() + lifetime, userId };
+    sessions.set(id, session);
+    res.cookie(cookieName, id, { httpOnly: true, sameSite: 'lax', path: '/api/demo', maxAge: lifetime });
+    return session;
+  };
+  router.use('/auth', authorizationRouter({ lookup, rotate, trusted: origin => settingsOrigins.has(origin) }, services));
   router.post('/session', (req, res) => {
     if (!settingsOrigins.has(req.get('Origin') ?? '') || req.get('X-CareProbe-Settings') !== '1') throw new LabError(403, 'SETTINGS_ORIGIN_REQUIRED', 'Gunakan Pengaturan pada aplikasi lokal.');
     const { mode } = z.strictObject({ mode: z.enum(['secure', 'vulnerable']) }).parse(req.body);
