@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { authState } from '../auth';
   import type { Service } from '../api';
   let { services }: { services: Service[] } = $props();
   const rupiah = new Intl.NumberFormat('id-ID', {
@@ -23,6 +24,7 @@
           >{rupiah.format(service.price)}</strong
         >
       </div>
+      {#if $authState.user?.role === 'PATIENT'}<a class="button secondary section-note" href={'/consultations?serviceId=' + service.id}>Pilih layanan</a>{/if}
     </article>
   {/each}
 </div>

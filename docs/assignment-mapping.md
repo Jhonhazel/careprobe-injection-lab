@@ -48,3 +48,43 @@ Bukti HTTP aktual dan batas download browser ada di test-cases.md; panduan langk
 | Konteks sesi | Settings → POST session dengan Origin+header khusus | Mode disimpan server, target reminder menolak mode request; HttpOnly/Lax/path sempit/expiry |
 
 SOURCE/FLOW/SINK/CONTROL/EVIDENCE/DAMPAK/MITIGASI/RETEST, prosedur dan checklist lengkap ada pada README bagian Materi9 dan hasil aktual di test-cases.md. Refleksi XSS terjadi pada DOM, bukan respons server. Origin berbeda port tetap same-site; tidak diklaim arbitrary cross-site cookie bypass. Tidak ada akun nyata, notifikasi, token theft atau perubahan DOCX.
+
+## Materi 10 — Authorization: Access Control dan Privilege Management
+
+Chapter1: Subject (identity/role server), Object (fixture owner/assignment/status), Action (view/download/create/review/complete), Policy terpusat di authorization.ts. RBAC membatasi PATIENT/DOCTOR/ADMIN, ABAC memeriksa ownership, assignment dan workflow. Chapter2 memakai kembali IDOR, forced browsing, workflow dan segregation of duties; dilengkapi grant dokter sementara dan satu stale-permission branch review1002. Pemetaan delapan subbab dan batasnya ada di bawah.
+
+Fixture otorisasi Map terpisah dari SQLite legacy, tidak tersedia melalui endpoint lama. Cookie CSRF anonim diperluas dengan login scrypt dan rotasi session/token; mode tetap server-side, semua POST auth tetap CSRF-protected di kedua mode. Daftar endpoint, matriks, SOURCE/FLOW/SINK/CONTROL/EVIDENCE/IMPACT/MITIGATION/RETEST dan screenshot ada pada README bagian Materi10; hasil aktual di test-cases.md. Tidak ada klaim seluruh legacy API sudah terautentikasi.
+
+## Integrasi login/logout website
+
+Authentication Materi10 tetap backend/session yang sama; UI dipindah dari Settings ke `/login`. Header memperlihatkan identity/role hasil GETauth dan logout POST nyata. AuthorizationPanel tetap menjalankan policy Materi10 tanpa form credential. Satu store memori memulihkan sesi setelah refresh, membersihkan identity pada401 dan tidak memakai localStorage sebagai bukti login. Token terbaru dibaca sebelum mutasi agar CSRF Materi9 dan workflow Materi10 tetap berjalan setelah rotasi. Mode hanya Settings; public legacy data tidak diklaim terlindungi. Prosedur dan batas pada README bagian Login dan logout website.
+
+## Materi 10 — Bab 2: Privilege Management
+
+| Subbab / konsep | Implementasi minimum | Bukti dan batas |
+| --- | --- | --- |
+| 2.1 Mengelola penetapan/pembatasan/review/revoke izin | Mapping PATIENT/DOCTOR/ADMIN existing; satu grant Raka; Admin-only approve/reject/revoke | Request201, self-approve403, approve/review/revoke200; audit tanpa token. Satu Admin, bukan multi-person approval |
+| 2.2 Lifecycle permintaan sampai expiry/revoke | REQUESTED → event APPROVED → ACTIVE atau REJECTED → EXPIRED/REVOKED | Server5menit, tes expiry-1ms/exact expiry. APPROVED event langsung diikuti ACTIVE; tanpa job/frontend timer |
+| 2.3 Izin minimum per tugas | Admin tidak membaca isi pasien, dokter hanya assigned, pasien own | Admin content403/unassigned1003 403 kedua mode; existing patient-review omission V200/S403. Tidak membuat bypass baru |
+| 2.4 Creator dan reviewer berbeda | Owner ditetapkan dari sesi create; Raka requester tidak bisa approve | Alya create nyata201 lalu review sendiri V200/S403 dan state diperiksa; Raka own record DUTY_CONFLICT kedua mode |
+| 2.5 Horizontal vs vertical escalation | IDOR detail/summary1002 Alya; review own1001 oleh pasien | Horizontal V200/S403; vertical V200/S403; tidak memberi ADMIN |
+| 2.6 Operasi langsung tanpa kontrol UI | POST transition action review sebagai Alya walau tombol dokter tidak ada | HTTP authenticated+CSRF V200/S403 dan PENDING tidak berubah; operasi sama dengan2.3/2.5 |
+| 2.7 Tahap workflow wajib | PENDING → IN_REVIEW → COMPLETED | Direct complete V200/S409; jalur sah200; completed tidak dibuka ulang |
+| 2.8 Izin lama berlebih setelah dicabut | doctorAtLogin hanya Raka, hanya review1002 Vulnerable setelah role/grant berakhir | Identity tetap live PATIENT; V200/IN_REVIEW + STALE_DOCTOR_SNAPSHOT, S403/PENDING. Bukan cache global; logout/expiry sesi tetap membatalkan akses |
+
+Definisi dirangkum dari konsep dalam permintaan tugas, bukan kutipan PDF yang tidak tersedia. Implementasi/test utama: authorization.ts, demo-session.ts, authorization.integration.spec.ts dan AuthorizationPanel beserta tes. Prosedur, screenshot dan SOURCE/FLOW/SINK/CONTROL/EVIDENCE/DAMPAK/MITIGASI/RETEST tiap skenario ada pada README Bab2 dan lab-report. Hasil terbaru dan batas bukti browser/clock ada di test-cases; hasil lama tetap historis. Login/logout, lima nav dan SQL/Command/XSS/CSRF tidak diganti.
+
+## Pengalaman website terautentikasi
+
+| Requirement | Implementasi / kontrol |
+| --- | --- |
+| Publik vs aplikasi | Layout+AuthGate; hanya Home/Login publik. SSR protected hanya loading shell; redirect client sesudah verifikasi sesi Path=/api/demo. Bukan klaim SSR authorization |
+| Dashboard nyata | CarePanel scope=personal untuk pasien/dokter; Admin accounts/privilege/audit, tanpa patient content. Counts berasal dari response |
+| Konsultasi pribadi | POST auth existing dengan serviceId+reason; owner sesi, service lookup katalog SQLite startup. Tambahan metadata server pada Map lama |
+| Data berizin | List scope=personal difilter backend; detail/summary/transition personal selalu policy Secure walau mode Vulnerable |
+| Role/grant live | Role dan grant authoritative existing; navigation/focus/refresh/denial memperbarui UI; tanpa polling/server push |
+| Session lifecycle | Store lama, restore deduplicated, identityRevision mencegah response lama setelah logout/login; reminder tidak terbawa antar akun |
+| Lab independent | Default list scope=lab; reason-only create tetap lab; legacy SQLite tidak dapat mengakses Map. SQL/Command/XSS/CSRF dan Bab2 tidak dihapus |
+| Bukti | UI/browser role flows, 16 observasi HTTP Docker, ux-summary.txt; screenshot tab ux-*.png. File browser download tidak diklaim tersimpan |
+
+Navigasi lima route tetap ada setelah login. Panel Authorization/Privilege kini di Pengaturan; petunjuk lama yang menyebut Riwayat untuk panel lab mengikuti lokasi baru. Analisis source/sink akademis sebelumnya tetap berlaku **pada fixture lab**, bukan konsultasi pribadi dengan serviceId. Normal consultation tidak menjadi target bypass baru. Panduan/screenshots/batas lengkap README bagian pengalaman terautentikasi.
